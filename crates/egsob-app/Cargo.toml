@@ -1,0 +1,19 @@
+# SPDX-License-Identifier: GPL-3.0-only
+[package]
+name = "egsob-app"
+description = "Application binary: Slint UI on KMS/DRM with libmpv render (OpenGL ES)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "egsob"
+path = "src/main.rs"
+
+[dependencies]
+egsob-core.workspace = true
+
+[lints]
+workspace = true
