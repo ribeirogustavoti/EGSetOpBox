@@ -120,10 +120,12 @@ fn main() {
 
                     // Stash the Slint proc-address function in a thread-local
                     // so gl_get_proc can reach it during RenderContext::new.
+                    // SAFETY: `get_proc_address` is valid for the entire RenderingSetup
+                    // call; we clear PROC_ADDR immediately after RenderContext::new.
                     PROC_ADDR.with(|slot| {
-                        *slot.borrow_mut() = Some(Box::new(|name: &CStr| {
-                            get_proc_address(name)
-                        }));
+                        let f: &'static dyn Fn(&CStr) -> *const c_void =
+                            unsafe { std::mem::transmute(get_proc_address) };
+                        *slot.borrow_mut() = Some(Box::new(move |name: &CStr| f(name)));
                     });
 
                     let ww = window_weak_n.clone();
