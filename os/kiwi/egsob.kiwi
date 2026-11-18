@@ -9,6 +9,7 @@
 	</description>
 	<profiles>
 		<profile name="Pi" description="Raspberry Pi 4B disk image (aarch64)"/>
+		<profile name="VM" description="x86_64 smoke-test VM disk image (qcow2)"/>
 	</profiles>
 	<preferences>
 		<version>0.1.0</version>
@@ -26,6 +27,25 @@
 		      rootfs_label="fedora"
 		      >
 			<bootloader name="grub2" bls="true" console="console" timeout="5"/>
+			<systemdisk name="fedora">
+				<volume name="@root=root"/>
+				<volume name="home" parent="/"/>
+				<volume name="var" parent="/"/>
+			</systemdisk>
+			<oemconfig>
+				<oem-resize>false</oem-resize>
+			</oemconfig>
+		</type>
+	</preferences>
+	<preferences profiles="VM" arch="x86_64">
+		<type image="oem" format="qcow2"
+		      filesystem="btrfs" btrfs_root_is_subvolume="true" btrfs_set_default_volume="false" fsmountoptions="x-systemd.growfs,compress=zstd:1"
+		      kernelcmdline="console=tty1 console=ttyS0,115200n8" devicepersistency="by-uuid"
+		      bootpartition="true" bootpartsize="2000" bootfilesystem="ext4" efipartsize="500" firmware="uefi"
+		      rootfs_label="fedora"
+		      >
+			<bootloader name="grub2" bls="true" console="console" timeout="5"/>
+			<size unit="G">12</size>
 			<systemdisk name="fedora">
 				<volume name="@root=root"/>
 				<volume name="home" parent="/"/>
@@ -72,5 +92,8 @@
 		<package name="shim-signed-aa64" arch="aarch64"/>
 		<package name="bcm283x-firmware" arch="aarch64"/>
 		<package name="uboot-images-armv8" arch="aarch64"/>
+		<package name="grub2-efi-x64" arch="x86_64"/>
+		<package name="grub2-efi-x64-modules" arch="x86_64"/>
+		<package name="shim-signed-x64" arch="x86_64"/>
 	</packages>
 </image>
