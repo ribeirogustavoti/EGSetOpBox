@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: GPL-3.0-only
+name: Spike slint-mpv build
+
+on:
+  pull_request:
+    paths:
+      - "spikes/slint-mpv/**"
+      - ".github/workflows/spike-slint-mpv.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: build aarch64 spike binary
+    runs-on: ubuntu-24.04-arm
+    container: fedora:44
+    steps:
+      - name: Install build dependencies
+        run: >
+          dnf -y install git gcc clang rustup pkgconf-pkg-config
+          mpv-devel libdrm-devel mesa-libgbm-devel mesa-libEGL-devel
+          libinput-devel libseat-devel libxkbcommon-devel systemd-devel
+          fontconfig-devel freetype-devel
+
+      - uses: actions/checkout@v6
+
+      - name: Install the pinned Rust toolchain
+        run: |
+          rustup-init -y --default-toolchain none --profile minimal
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+          channel="$(sed -n 's/^channel = "\(.*\)"$/\1/p' rust-toolchain.toml)"
+          "$HOME/.cargo/bin/rustup" toolchain install "$channel" --profile minimal
+
+      - name: Build
+        run: cargo build --release --manifest-path spikes/slint-mpv/Cargo.toml
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: egsob-spike-slint-mpv
+          path: spikes/slint-mpv/target/release/egsob-spike-slint-mpv
+          archive: false

@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: GPL-3.0-only
+[package]
+name = "egsob-spike-slint-mpv"
+version = "0.0.0"
+edition = "2024"
+license = "GPL-3.0-only"
+publish = false
+
+[workspace]
+
+[dependencies]
+slint = { version = "1.18", default-features = false, features = ["compat-1-2", "std", "backend-linuxkms", "renderer-femtovg"] }
+libmpv2 = "5.0"
