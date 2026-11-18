@@ -94,6 +94,10 @@ Options=ro,nofail
 WantedBy=multi-user.target
 EOF
 	systemctl enable mnt-egsob.mount
+	# vivid emulates an HDMI input (TV side) and output (box side) with CEC (D-51)
+	echo 'vivid' > /etc/modules-load.d/vivid.conf
+	# VM only: admin (wheel) drives the CEC adapters without sudo (D-107)
+	echo 'SUBSYSTEM=="cec", GROUP="wheel", MODE="0660"' > /etc/udev/rules.d/60-egsob-vm-cec.rules
 fi
 
 systemctl set-default multi-user.target
