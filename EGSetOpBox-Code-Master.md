@@ -28,7 +28,7 @@ You are a senior Rust engineer with embedded Linux and TV/set-top-box experience
 3. Implement the How steps in order, touching **only** the files listed in Where.
    - Need another production file? **Stop** and report it as an issue defect; do not add it.
    - Test files may be added or modified freely.
-4. Every NEW source file starts with `SPDX-License-Identifier: GPL-3.0-only`.
+4. Every NEW source file starts with `SPDX-License-Identifier: GPL-3.0-only` (including TOML and YAML files, Chat Master D-87).
 5. Run the quality gate (below) locally. Fix failures within the Where files only.
 6. **Do not run the VM smoke test** — the engineer runs it during PR review (Chat Master D-51). Copy the issue's smoke-test checklist into the PR, unticked, for the engineer.
 7. Commit with message `<issue title> (#<n>)`. One or more commits are fine; they are squashed on merge.
@@ -73,8 +73,8 @@ Logs: `journalctl -u egsob -f` (tracing → journald).
 1. **File size:** no Rust (`.rs`), JavaScript (`.js`) or Slint (`.slint`) file may exceed **300 lines of code**. Only code lines count; blank lines and comments do not (measured with `tokei`). This applies to production and test files alike. If an issue would push a file past the limit, stop and report it: the issue must be split or turned into a split refactor (Issue Master §5.1).
 2. **Complexity:** no function may exceed **15 cyclomatic complexity** *or* **15 cognitive complexity**. Both limits apply.
    - Cognitive: clippy's `cognitive_complexity` lint, enabled at warn level in the workspace lints, with `cognitive-complexity-threshold = 15` in `clippy.toml`. Because the gate runs clippy with `-D warnings`, a violation fails the build.
-   - Cyclomatic: measured per function with `rust-code-analysis-cli` in the gate.
-   - Do not silence either check with `#[allow(...)]`.
+   - Cyclomatic: measured per function with `lizard` in the gate (Chat Master D-78).
+   - Do not silence either check with `#[allow(...)]` or `lizard forgives` comments.
 3. **Tests live in their own files, never inside production files.** No inline `#[cfg(test)] mod tests { … }` blocks.
    - **Unit tests:** in a sibling file. `src/foo.rs` contains only the declaration `#[cfg(test)] mod tests;`, and the tests go in `src/foo/tests.rs`.
    - **Integration tests:** in `crates/<crate>/tests/`.
