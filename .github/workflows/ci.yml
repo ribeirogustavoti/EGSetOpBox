@@ -44,3 +44,20 @@ jobs:
 
       - name: cargo test
         run: cargo test --workspace
+
+  toolchain:
+    name: rust-toolchain.toml matches Fedora 44 rust
+    runs-on: ubuntu-24.04-arm
+    container: fedora:44
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Compare the pinned toolchain with Fedora 44's rust package
+        run: |
+          pinned="$(sed -n 's/^channel = "\(.*\)"$/\1/p' rust-toolchain.toml)"
+          fedora="$(dnf -q repoquery --latest-limit 1 --queryformat '%{version}' rust)"
+          echo "pinned: $pinned / Fedora 44 rust: $fedora"
+          if [ "$pinned" != "$fedora" ]; then
+            echo "::error file=rust-toolchain.toml::pins $pinned but Fedora 44 ships rust $fedora"
+            exit 1
+          fi
