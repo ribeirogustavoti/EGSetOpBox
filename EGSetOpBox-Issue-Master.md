@@ -1,0 +1,231 @@
+# EGSetOpBox — Master Prompt (GitHub Issue Template) — Source of Truth
+
+> **What this file is.** The canonical record for GitHub issue creation rules on the EGSetOpBox project. It owns: metadata rules (title, milestone, author), the immutable section order, per-section content rules, size caps, split signals, forbidden patterns, and the mandatory 1:1 correspondence between How ↔ Where ↔ Source Code Samples.
+>
+> **What this file is NOT.** It is not the project decisions record (that lives in `EGSetOpBox-Chat-Master.md`) nor the AI agents' execution rules (`EGSetOpBox-Code-Master.md`). Those two files **must point here** for any issue-format question; if they say something that contradicts this file, this file wins.
+>
+> **How to keep them in sync.** When an issue rule changes:
+> 1. Update the rule in this file.
+> 2. Add a change log entry in §10 here.
+> 3. Do not restate rules in Chat Master or Code Master — they only carry pointers.
+>
+> The change log for issue-format rules lives **only in this file**.
+
+---
+
+## 1. Authority and self-sufficiency test
+
+- This file is **canonical**. Any issue that deviates from it is defective — stop and correct rather than draft-through.
+- **Self-sufficiency test** — before opening an issue, ask: *could a competent developer implement this from the body alone, with no further AI assistance, and produce the same diff the AI agent (Claude Code or GitHub Copilot) would?* If not, the issue is not ready.
+- **Ask, don't guess.** If you lack the current contents of a MODIFY file needed to write a proper diff, or don't know the shape of an existing symbol, **stop and ask the engineer for the file or snippet before drafting.** Guessing is prohibited.
+- **Just-in-time drafting.** The backlog in `EGSetOpBox-Chat-Master.md` §8 holds item *titles* only. A full issue body is drafted immediately before the item is implemented, when the files it touches exist and their contents can be supplied.
+
+---
+
+## 2. Metadata (required on every issue)
+
+| Field | Rule |
+|---|---|
+| **Title** | Short imperative, ≤80 chars. Format: `<Area/Component> — <action/outcome>` (e.g. `PlayerView — show seek bar on OK press`). |
+| **Labels** | **None.** This project does not use labels. |
+| **Milestone** | Assigned to the milestone object `M<n> — <name>` (see Chat Master §8). |
+| **Author / Assignee** | `ribeirogustavoti`. |
+| **Header context** (optional, when applicable) | One-line references at the top of the body: `Depends on #N`, `Blocks #N`, `Sub-task of #N`, `Overrides #N`. |
+
+---
+
+## 3. Immutable section order
+
+The six body sections appear in this **exact order**. Never reorder. Never skip. Never merge. Never split.
+
+1. **What**
+2. **How**
+3. **Where**
+4. **Source Code Samples**
+5. **Acceptance criteria**
+6. **Constraints**
+
+Each section uses a level-3 markdown heading (`### What`, `### How`, etc.).
+
+---
+
+## 4. Section rules
+
+### 4.1 What
+
+Two required parts:
+
+**Part A — Behavior description.** 1–3 sentences, from the TV viewer / box operator perspective (or developer perspective for tooling, OS image and CI items). State *the change*, not the motivation. No "Why" prose.
+
+**Part B — Out of scope.** An explicit `**Out of scope:**` sub-block, as a bulleted list of things a reader might reasonably assume fall in this issue but do not.
+
+```
+### What
+
+Pressing OK on the remote while a video plays shows the seek bar for 5 seconds.
+Left/Right while the bar is visible seeks −10 s / +10 s.
+
+**Out of scope:**
+- Chapter navigation
+- Seek preview thumbnails
+- Mouse interaction with the seek bar
+```
+
+Include the out-of-scope list even when it feels obvious.
+
+### 4.2 How
+
+Numbered concrete procedural steps (`1.`, `2.`, `3.`). Each step states *what* changes, not *why*. Refer to file paths as they appear in Where. Include signatures, imports, or contracts when a step requires them.
+
+### 4.3 Where
+
+Exhaustive enumeration of every file that will be created or modified:
+
+```
+### Where (N file(s))
+
+- `path/to/file.ext` (NEW|MODIFY — brief description of the change)
+- `path/to/other.ext` (NEW|MODIFY — brief description)
+```
+
+- The `(N file(s))` count in the heading is required.
+- Exact paths, with line ranges when meaningful (e.g. `~line 250 area`, `lines 44–68`).
+- No vague "the relevant file."
+- Every production file listed here MUST have a matching Source Code Samples entry (§4.4).
+- Production files include Rust sources, `.slint` files, `Cargo.toml`, KIWI descriptions (`*.kiwi`, `config.sh`), RPM `.spec` files, systemd units, GitHub Actions workflows, VM scripts, add-on `manifest.toml` and `.rhai` files, and SQL migrations.
+- **If the AI agent touches a file not listed here during implementation, that is an issue defect** — the issue is reopened, the file added, and re-dispatched. Do not silently add files.
+
+### 4.4 Source Code Samples
+
+**MANDATORY 1:1 correspondence with Where for every PRODUCTION file — NEVER DRIFT.**
+
+If Where lists N NEW files and M MODIFY files (excluding test files), Source Code Samples contains exactly N+M entries:
+
+- **NEW files:** full implementation.
+- **MODIFY files:** a **unified diff** (or before/after blocks). If you lack the current contents to write a proper diff, **STOP and ask the engineer for the file before drafting the issue.** Do not guess.
+
+**Filename header REQUIRED above every code block**, even in single-file issues — bold, exact path, NEW/MODIFY tag:
+
+~~~
+**crates/egsob-player/src/seek.rs** (NEW)
+
+```rust
+// SPDX-License-Identifier: GPL-3.0-only
+pub const SEEK_STEP_SECS: f64 = 10.0;
+```
+~~~
+
+- Every NEW Rust, Slint, Rhai, shell and SQL file starts with `SPDX-License-Identifier: GPL-3.0-only` in that language's comment syntax.
+- **Test files are exempt** from Source Code Samples. They may appear in Where or not, but never require a code sample entry.
+- **Verbatim third-party texts** (e.g. the GPL-3.0 `LICENSE`) are given **by reference**: the sample names the canonical source URL and states "verbatim, unmodified" instead of the full text.
+- **Code limits apply to samples** (rules owned by `EGSetOpBox-Code-Master.md`, CODE LIMITS). A sample is defective if it would leave a `.rs`, `.js` or `.slint` file above 300 code lines, contains a function above 15 cyclomatic or cognitive complexity, or puts tests inside a production file (no inline `#[cfg(test)] mod tests { … }`; a NEW Rust file with unit tests declares `#[cfg(test)] mod tests;` and the tests go in a sibling file). When a MODIFY would push a file past 300 code lines, split the issue or draft a split refactor first (§5.1).
+- **Language tag on every fenced block** — `rust`, `slint`, `toml`, `sql`, `sh`, `xml`, `yaml`, `ini` (systemd units), `rhai`, `spec`, etc.
+
+### 4.5 Acceptance criteria
+
+GitHub checkbox list (`- [ ]` per item). Each criterion:
+
+- Testable and observable — verifiable by running the box (VM or Pi), reading the diff, or running a command.
+- The last items are always the build/test gate, in this order:
+  - `- [ ] cargo fmt --all --check passes`
+  - `- [ ] cargo clippy --workspace --all-targets -- -D warnings passes`
+  - `- [ ] cargo test --workspace passes`
+  - `- [ ] Code limits check passes (≤300 code lines per .rs/.js/.slint file, cyclomatic and cognitive complexity ≤15 per function, no inline tests)`
+  - `- [ ] shellcheck passes` — required whenever the issue adds or changes a `.sh` file.
+  - `- [ ] VM smoke test passes (<what to observe>)` — required whenever the issue changes runtime behavior; state what the tester must see.
+- Non-Rust issues (KIWI, CI, RPM) replace the cargo lines with their own verification command (e.g. `kiwi-ng ... system build` succeeds; image boots in the aarch64 QEMU VM).
+- The gate lines count as **one** checkbox for the split-signal limit in §5.2.
+
+### 4.6 Constraints
+
+**Always required, even when boilerplate.** Bulleted list of what NOT to do or invariants to honor:
+
+- Reuse boundaries, components to avoid touching, anti-patterns to avoid.
+- **Always include:** `- Do NOT add AI attribution anywhere` (title, body, commit messages, PR description, comments, branch names).
+
+Never leave the section empty.
+
+---
+
+## 5. Size caps and split signals
+
+### 5.1 Size caps
+
+- **Default cap** (single-purpose issues): **≤3 files in Where, ≤~150 LOC net new** (additions minus deletions).
+- **Split/consolidate refactor exception:** when an issue is a refactor whose stated purpose is to split a file into smaller files or consolidate several files into one, the file-count cap is **≤6 files** in Where; the LOC cap stays at ≤~150 net new.
+  - The body must explicitly state: (a) which file is being split/consolidated, (b) the resulting file list, (c) the verification that behavior is unchanged (typically: `cargo test --workspace` passes without test-body changes; any test-file changes are limited to import-path updates).
+
+### 5.3 One-off waivers
+
+The engineer may waive the §5.1 caps and §5.2 split signals for a named item. Every waiver is recorded next to the item in Chat Master §8; an issue may rely on a waiver only if it is recorded there. The body's header context states it: `Cap waiver: Chat Master §8 <item ID>`.
+
+Current waivers: **M0-01** (repo bootstrap: masters, README, LICENSE, Claude Code config) and **M0-02** (scaffold of all 12 `egsob-*` crates, crossing crate boundaries).
+
+### 5.4 Spike issues
+
+Spike issues (title prefix `Spike —`) follow the six-section format **where it applies**. Sections that do not apply may be dropped, and the order of the remaining sections is unchanged. Typical shape: What (the question to answer + Out of scope), How (what the spike code/script does and what the engineer runs), Where (spike files under `spikes/<name>/` and `docs/spikes/<name>.md`), AC (what the findings must report), Constraints. Source Code Samples are optional for spike code, because it is never merged. Spikes deliver two PRs: the code PR is closed unmerged (branch kept), and the findings PR merges `docs/spikes/<name>.md` plus the Chat Master update.
+
+### 5.2 Split signals
+
+Any one of these triggers a stop and request-to-split:
+
+- AC list has >5 checkboxes (the build/test gate counts as one)
+- Introduces a NEW trait or refactors an EXISTING one — *unless that is the explicit purpose of a refactor issue under §5.1's exception*
+- >3 files in Where — *unless the refactor exception applies*
+- Crosses crate boundaries in the Cargo workspace
+
+---
+
+## 6. Forbidden in issues
+
+- **Why prose** — no rationale paragraphs, business case, design philosophy, or "this matters because…"
+- **Who prose** — no narrative about who should pick it up; assignment is metadata only.
+- **AI attribution anywhere** — title, body, commit messages, PR titles/descriptions, branch names, code comments, changelogs, or co-author trailers. No "Generated with…", "Co-authored-by: Claude", "🤖", or any analogous mention of any AI tool.
+- **Labels** — this project uses none.
+- **Section reordering** — the six-section order in §3 is immutable.
+- **Section omissions** — every section must appear, even if brief (only exception: spike issues, §5.4).
+- **Guessing file contents** — if you lack the current contents of a MODIFY file, ask; do not fabricate a diff.
+- **Silent file additions** — the AI agent MUST NOT add production files during implementation that were not listed in Where.
+
+---
+
+## 7. Canonical exemplar
+
+The structure and density reference is the engineer-supplied example issue (*"Bundled plugin archives must include the plugin's top-level `assets/` directory"*, from another project). Match its:
+
+- Section order and heading style
+- `**Out of scope:**` sub-block in What
+- Numbered How steps referencing exact paths
+- `### Where (N file(s))` heading with NEW/MODIFY tags and descriptions
+- Bold filename header + language tag on every code sample
+- Testable AC with build/test lines at the end
+- Bulleted Constraints with the no-AI-attribution line
+
+Differences for EGSetOpBox: no labels; SPDX header is `GPL-3.0-only`; gate lines per §4.5. Once the first EGSetOpBox issue is merged, replace this exemplar with it and log the change in §10.
+
+---
+
+## 8. Referenced by
+
+- `EGSetOpBox-Chat-Master.md` — pointer in §3 decision D-30 and §9 PM chat system prompt. When drafting an issue in a planning chat, load this file into context first.
+- `EGSetOpBox-Code-Master.md` — pointer in the INPUTS section. When receiving an issue as input, verify it against this file before starting; reject and request clarification on any deviation.
+
+Both files must remain **pointers only** — do not restate rules from this file in either master.
+
+---
+
+## 9. File location
+
+Repository root: `EGSetOpBox-Issue-Master.md`.
+
+---
+
+## 10. Change log
+
+- **v1 (initial):** File created for EGSetOpBox, adapted from the engineer's issue standard of another project. Changes from that source: (a) labels removed entirely; (b) frontend/backend split signal removed; (c) SPDX header `GPL-3.0-only`; (d) gate lines fixed to fmt/clippy/test + VM smoke test, counted as one checkbox; (e) just-in-time drafting rule added to §1; (f) production-file list in §4.3 extended to OS image, packaging, CI, add-on and SQL files; (g) exemplar is the engineer-supplied example issue until the first EGSetOpBox issue merges.
+
+- **v2 (2026-11-18):** Code limits from the Code Master reflected in issues: new gate line in §4.5 (code limits check), and §4.4 rule that Source Code Samples must respect the 300-code-line, complexity-15 and separate-test-file limits. The limits themselves stay defined in the Code Master.
+
+- **v3 (2026-11-18):** M0 planning. §4.4: verbatim third-party texts by reference; `.slint` added to the 300-code-line rule. §4.5: code limits line includes `.slint`; new shellcheck gate line for `.sh` changes. New §5.3 one-off waivers (M0-01, M0-02) and §5.4 spike issues (flexible sections, two PRs). §6 omission rule points to §5.4. §4.4 example fenced with `~~~` instead of zero-width-space escapes.
+
+*Sync rule: when an issue-format rule changes, update this file first, log it here, then verify Chat Master and Code Master pointers still resolve.*
