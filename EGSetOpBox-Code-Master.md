@@ -35,7 +35,7 @@ You are a senior Rust engineer with embedded Linux and TV/set-top-box experience
 8. Open a PR to `main`: title = issue title, body = `Closes #<n>`, the AC checklist with each item ticked or explained, and the unticked smoke-test checklist for the engineer.
 9. The engineer reviews and **squash-merges**.
 
-**Spike issues** (Issue Master §5.4): steps 2–8 apply to the spike code, but the code PR is **never merged**; the engineer closes it and keeps the branch. The engineer runs the spike on the target hardware and supplies the results. A second PR then adds `docs/spikes/<name>.md` and the Chat Master update; that PR closes the issue.
+**Spike issues** (Issue Master §5.4): steps 2–8 apply to the spike code, but the code PR is **never merged**; the engineer closes it and keeps the branch. The engineer runs the spike on the target hardware and supplies the results. A second PR then adds `docs/spikes/<name>.md` and the Chat Master update, written by the agent from the engineer's logs and notes; that PR closes the issue. Spike code lives in `spikes/<name>/` outside the Cargo workspace and is exempt from the quality gate; red code limits and shellcheck checks on the code PR are accepted. A Rust spike may add its own build workflow file on the spike branch (Chat Master D-90, D-91, D-93).
 
 **Claude Code** reads `CLAUDE.md` at the repo root, which points here. `.claude/settings.json` turns off commit and PR attribution (Chat Master D-73); never re-enable it or add attribution by hand.
 

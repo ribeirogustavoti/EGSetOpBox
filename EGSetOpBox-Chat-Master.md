@@ -96,11 +96,11 @@ Act as a senior software engineer experienced in embedded Linux, TV/set-top-box 
 | D-63 | Service user | `egsob` is created **both** by an RPM `sysusers.d` file and in KIWI `config.sh`. |
 | D-64 | Service restart | `egsob.service`: `Restart=always`, `RestartSec=2`. |
 | D-65 | KIWI builds | Pi image (aarch64) built in **CI on tag** and published as a **GitHub Release asset** (`.raw.xz`); the dev host can also build it (aarch64 via qemu-user-static). An **x86_64 profile** of the same description, built **on the dev host only**, is the smoke-test VM image. |
-| D-66 | Image contents | Boot chain = **Fedora default** (Pi firmware → U-Boot → UEFI → GRUB). Root FS **btrfs**. `en_US.UTF-8`, `Europe/Brussels`, hostname `egsob`. **sshd on, key-only**; the engineer's public key is committed in `os/kiwi/`. **Wi-Fi is configured after first boot** (Ethernet + SSH + `nmcli`); credentials are never in the image. |
+| D-66 | Image contents | Boot chain = **Fedora default** (Pi firmware → U-Boot → UEFI → GRUB). Root FS **btrfs**. `en_US.UTF-8`, `Europe/Brussels`, hostname `egsob`. **sshd on, key-only**; the engineer's public key is committed in `os/kiwi/`. **Wi-Fi from a boot-partition file** (amended by D-100): after flashing, the engineer copies a small file with SSID and password onto the card's FAT boot partition; a first-boot service imports it into NetworkManager and deletes the file. Credentials are never in the image. |
 | D-67 | Audio | **ALSA direct** (mpv `ao=alsa`) to HDMI; no sound server. |
 | D-68 | Display | Bravia on **HDMI0** (`/dev/cec0` expected). KMS output **3840×2160@30**; video stays 1080p (D-02) and is scaled. |
 | D-69 | VMs | x86_64 VM: KIWI x86_64 profile, **`virtio-vga-gl` + virgl**, `-display egl-headless`; `egsob` is **built on the dev host and shared** into the VM (virtiofs/9p). aarch64 VM: QEMU **`virt` + edk2 UEFI** (userspace/RPM checks, not Pi firmware boot). Scripts are **Bash + shellcheck**. |
-| D-70 | Spikes | Format per Issue Master §5.4. Agent writes the code; **engineer runs it** on the Pi, which runs the **stock Fedora 44 aarch64** image until the KIWI image exists. **Two PRs per spike:** the code PR is closed unmerged (branch kept); the findings PR merges `docs/spikes/<name>.md` and the Chat Master update. Slint spike uses the **`libmpv2` crate**; must show 1080p H.264 with ~0 dropped frames, UI ≥30 fps over video at 4K30, and running as `egsob` via logind on tty1 without root (D-45). Decode spike: public sample files fetched by its script. CEC spike keys: D-pad/OK/Back, Play/Pause/Stop/FF/RW, CH+/CH−, digits. Auvio spike: run by the engineer with his own account; credentials never committed. |
+| D-70 | Spikes | Format per Issue Master §5.4. Agent writes the code; **engineer runs it** on the Pi, which runs the **stock Fedora 44 aarch64** image until the KIWI image exists. **Two PRs per spike:** the code PR is closed unmerged (branch kept); the findings PR merges `docs/spikes/<name>.md` and the Chat Master update. Slint spike uses the **`libmpv2` crate**; must show 1080p H.264 with **no visible stutter** (judged by eye on the Bravia, amended by D-96), UI ≥30 fps over video at 4K30 (read from an on-screen fps counter), and running as `egsob` via logind on tty1 without root (D-45). Decode spike: public sample files fetched by its script. CEC spike keys: D-pad/OK/Back, Play/Pause/Stop/FF/RW, CH+/CH−, digits. Auvio spike: run by the engineer with his own account; credentials never committed. |
 | D-71 | M0 exit | All M0 items closed; the Pi boots the KIWI image and `egsob.service` shows the **placeholder screen** on the Bravia; spike findings recorded (O-04 resolved, D-50 settled, CEC and Slint findings in §3); tag `v0.1.0` builds in COPR and `dnf upgrade` on the Pi pulls it. **No due date.** |
 | D-72 | README | Summary + GPL-3.0-only + private-use note; pointers to the three masters; legal note (content-agnostic torrent/Stremio, no DRM circumvention); a **Build** section filled by the workspace scaffold issue. |
 | D-73 | Claude Code config | Repo root `CLAUDE.md` points the agent to the three masters and restates the no-attribution rule; `.claude/settings.json` sets `"attribution": {"commit": "", "pr": ""}` so Claude Code adds no trailer or PR footer. |
@@ -112,12 +112,25 @@ Act as a senior software engineer experienced in embedded Linux, TV/set-top-box 
 | D-79 | GitHub Actions | Actions referenced by **major tag** (`actions/checkout@v6`, `actions/cache@v6`); cargo registry and `target/` cached. |
 | D-80 | Drafting waves | M0 bodies are drafted per phase: Phase A first, each later phase once the previous one is merged. Each wave starts with a `Docs — record <wave> planning decisions` issue. Issues are created on GitHub by a Claude Code prompt run on the dev host (D-74). |
 | D-81 | Issue #1 | Pushed directly to `main` without a PR, because the repo had no `main` branch yet. One-off exception to D-33. |
-| D-82 | Dev host release | The dev host currently runs **Fedora 37** (end of life). The engineer upgrades it to **Fedora 44** before M0-06 (D-84); D-35 means Fedora 44 from then on. |
+| D-82 | Dev host release | The dev host was upgraded from Fedora 37 to **Fedora 44** (confirmed 2026-11-18); D-35 means Fedora 44. |
 | D-83 | Pre-VM runtime checks | Until M0-19 (smoke test script) is merged, issues that change runtime behaviour replace the VM smoke test AC line with a command check (e.g. `cargo run -p egsob-app` prints `egsob 0.1.0`). |
 | D-84 | Wave A sequencing | The dev host is upgraded to Fedora 44 **before M0-06** is dispatched; M0-30 and M0-02…M0-05 run on the current host with rustup. |
 | D-85 | MSRV | The workspace sets `rust-version = "1.99.1"` (same value as `rust-toolchain.toml`, D-77) and every crate inherits it; set in the scaffold (M0-02). |
 | D-86 | CI runs | The CI workflow runs on **pull requests to `main`** and **pushes to `main`**. A CI issue is accepted when its own PR run is green. |
 | D-87 | SPDX on config | Every TOML and YAML file (Cargo manifests, toolchain/rustfmt/clippy config, GitHub workflows, KIWI/YAML config) starts with `# SPDX-License-Identifier: GPL-3.0-only`. Markdown, JSON, `.gitignore` and `LICENSE` carry none. |
+| D-88 | M0 reopened | The GitHub milestone `M0 — Foundations & spikes` was closed with only Phase A done (#1–#11). It is **reopened**; phases B–E are finished **in M0**. M1 issues are dispatched only after the D-71 exit. M1 planning is deferred to a later session. |
+| D-89 | Spike Pi | The Pi runs the **stock Fedora 44 Minimal aarch64** image, written to the microSD with an image writer. Network: **Wi-Fi only**, joined at first boot with a **keyboard on the Pi**. **RPM Fusion free** is enabled and full ffmpeg replaces ffmpeg-free (as D-05). The `egsob` user, the tty1 logind service unit for M0-11 and a **temporary `/dev/cec0` udev rule** for M0-13 are set up **by hand** following `docs/pi-setup.md` (added by M0-31). |
+| D-90 | Spike code | Spike code lives in `spikes/<name>/`, **outside the Cargo workspace**, and does **not** have to pass the gate. Red **code limits** and **shellcheck** checks on spike code PRs are accepted (the PRs are never merged). |
+| D-91 | Spike builds | Rust spikes are built by a **spike-only workflow file** on the spike branch (`ubuntu-24.04-arm` + `fedora:44`, Fedora's own `mpv-devel`, 0.41.0 in F44). The engineer downloads the artifact with the browser on the dev host and copies it to the Pi with `scp`. Nothing is added to `main`. |
+| D-92 | Spike languages | M0-11: **Rust** (Slint + `libmpv2`). M0-12: **shell** driving the `mpv` CLI. M0-13: **shell** with `cec-ctl`. M0-14: **manual Firefox procedure + shell** manifest checker. |
+| D-93 | Spike findings | The engineer supplies script logs and notes; **Claude Code writes** `docs/spikes/<name>.md` and the Chat Master update in the findings PR. |
+| D-94 | Wave B | Wave B = M0-31 then the spikes **one by one in the order M0-12 → M0-11 → M0-13 → M0-14**; each spike starts after the previous spike's findings PR is merged. Wave B bodies are drafted per D-80. |
+| D-95 | Decode spike (M0-12) | Samples: **H.264 1080p, HEVC 1080p and 4K, VP9 1080p, AV1 1080p** (public URLs proposed by the planning chat, approved by the engineer — O-16). hwdec modes on every sample: **`no`, `v4l2m2m-copy`, `drm-copy`, `v4l2m2m`, `drm`** (never `auto`). Outputs: **`vo=gpu` with `gpu-context=drm`** and **`vo=drm`**. About 1 minute per run, unattended. YouTube: the D-49 `yt-dlp_linux_aarch64` binary lists formats (`-F`) and plays the H.264 ≤1080p format for the lives of **Euronews, Jovem Pan News, DW News and Revista Oeste** (channel identities proposed by the planning chat, approved by the engineer — O-16). Report: **script log + engineer notes** (smooth/stutter per run). |
+| D-96 | Slint spike (M0-11) | Runs **after M0-12** and uses its hwdec finding. Plays a **public 1080p H.264 sample**. The Slint overlay is an **animated moving bar + on-screen fps counter**. Pass is judged **visually**: no visible stutter, and the fps counter shows ≥30 at 4K30. Amends D-70. |
+| D-97 | CEC spike (M0-13) | Keys: the D-70 list only. Claims a **playback** device address, then repeats the key test as a **tuner**, and compares. Also records **TV standby, power-on, active source and input switching**. Runs as **`egsob`** with the temporary udev rule (D-89). |
+| D-98 | Auvio spike (M0-14) | The engineer opens La Une, Tipik and La Trois live in **Firefox on the dev host** while logged in and copies the manifest URLs; a shell script reports DRM markers and stream format. Also tries **yt-dlp's RTBF extractor** with and without the engineer's login cookies (cookie file never committed). If DRM-free, the streams are also **played on the Pi** with mpv. |
+| D-99 | Wave B docs issue | **M0-31** `Docs — record wave B planning decisions` changes `EGSetOpBox-Chat-Master.md`, `EGSetOpBox-Code-Master.md` and `docs/pi-setup.md` (NEW). Within the ≤3-file cap, so **no waiver**. AC: masters updated, `docs/pi-setup.md` present, markdown renders, gate line. |
+| D-100 | Wi-Fi in the KIWI image | Amends D-66: Wi-Fi comes from a **file on the FAT boot partition**, imported and deleted at first boot. Implemented by a KIWI issue added to §8 when Phase C/E is planned. |
 
 ---
 
@@ -276,6 +289,8 @@ net_allow = ["example-broadcaster.tld"]   # network allowlist for the script
 | O-12 | ~~VM smoke test definition.~~ **Resolved → D-51 (scripted + checklist, run by the engineer).** | — |
 | O-13 | ~~Exact rustc version in Fedora 44.~~ **Resolved → 1.99.1** (Fedora 44 updates, 2026-10-19, from the Fedora package pages). Later drift is caught by the M0-08 CI check (D-77). | — |
 | O-14 | ~~Tool availability.~~ **Resolved:** Fedora 44 ships `tokei` 15.0.0 (JSON output built in; Slint is in tokei's language list, and M0-06's AC verifies the Fedora build counts `.slint`) and `ShellCheck` 0.11.0; `lizard` is not packaged (→ pip, D-78). | — |
+| O-15 | Slint and `libmpv2` crate versions for M0-11 (latest stable Slint last seen: 1.18.1, 2026-09-21) and their MSRV against 1.99.1. Verify at M0-11 drafting. | M0-11 drafting |
+| O-16 | Public sample URLs for M0-12 (D-95) and the YouTube channel identities of Euronews, Jovem Pan News, DW News and Revista Oeste. The planning chat researches them; the engineer approves before the issue is created. | M0-12 drafting |
 
 ---
 
@@ -285,7 +300,7 @@ Item titles follow the Issue Master title format. Bodies are drafted just in tim
 
 ### M0 — Foundations & spikes
 
-Prerequisite (not an issue): the engineer creates the empty repo; settings per D-52. Exit criteria: D-71. No due date.
+Prerequisite (not an issue): the engineer creates the empty repo; settings per D-52. Exit criteria: D-71. No due date. Milestone reopened after Phase A (D-88).
 
 Items are listed **in implementation order** (phases A → E). `Deps` names the items that must be merged first (for spikes: findings merged). Epic in brackets.
 
@@ -305,14 +320,15 @@ Items are listed **in implementation order** (phases A → E). `Deps` names the 
 | M0-09 | `CI — run code limits script in the PR workflow` | E0.2 | 06, 08 |
 | M0-10 | `CI — shellcheck on all shell scripts` | E0.2 | 09 |
 
-**Phase B — Spikes** (D-70: code PR closed unmerged; findings PR merges `docs/spikes/` + Chat Master)
+**Phase B — Spikes** (D-70: code PR closed unmerged; findings PR merges `docs/spikes/` + Chat Master). Order and rules: D-89…D-99.
 
 | ID | Title | Epic | Deps |
 |---|---|---|---|
-| M0-11 | `Spike — Slint on KMS/DRM with libmpv render in one GL context as egsob via logind` | E0.6 | 02 |
-| M0-12 | `Spike — hardware video decode reality check on Fedora/Pi` (resolves O-04) | E0.6 | 01 |
-| M0-13 | `Spike — kernel CEC key events from the Bravia remote` | E0.6 | 01 |
-| M0-14 | `Spike — RTBF Auvio live streams check (DRM, login, stream format)` (settles D-50) | E0.6 | 01 |
+| M0-31 | `Docs — record wave B planning decisions` (D-99) | E0.1 | 10 |
+| M0-12 | `Spike — hardware video decode reality check on Fedora/Pi` (resolves O-04; D-95) | E0.6 | 31 |
+| M0-11 | `Spike — Slint on KMS/DRM with libmpv render in one GL context as egsob via logind` (D-96) | E0.6 | 12 |
+| M0-13 | `Spike — kernel CEC key events from the Bravia remote` (D-97) | E0.6 | 11 |
+| M0-14 | `Spike — RTBF Auvio live streams check (DRM, login, stream format)` (settles D-50; D-98) | E0.6 | 13 |
 
 **Phase C — Image base & VM** (before the app, so runtime issues can be smoke-tested)
 
@@ -486,3 +502,4 @@ when the session ends.
 - **v5 (2026-11-18):** D-34 gate now includes the code limits check. M0 backlog: added three gate-tooling items (clippy cognitive threshold, code limits script, CI step).
 - **v6 (2026-11-18):** M0 planning session. Added D-52…D-74 (planning sessions write to GitHub only from Claude Code on the dev host, Claude Code config, repo, epics, agent, scaffold, toolchain, binary, lints, limits tooling incl. `.slint`, CI runner, COPR, versioning, service user/restart, KIWI builds and contents, audio, display, VMs, spikes, M0 exit, README). Added O-13, O-14 (facts to verify at drafting). §4.2 layout extended. §6 adds 4K30 GPU risk. §8 M0 rewritten as an ordered list M0-01…M0-29 with dependencies; new items: toolchain pin, toolchain CI check, shellcheck, KIWI x86_64 profile, udev rule, placeholder app; the logind check folds into the Slint spike; VM phase moved before the app. Code Master updated in step: `.slint` limit, shellcheck gate, unwrap/unsafe rules, spike two-PR flow, Claude Code config.
 - **v7 (2026-11-18):** Wave A planning. Added D-75…D-87 (Cargo.lock, scaffold details, exact toolchain pin with failing CI check, lizard via pip replaces rust-code-analysis-cli, Actions by major tag + cache, drafting waves, issue #1 exception, dev host upgrade to Fedora 44, pre-VM runtime checks, wave A sequencing, MSRV in the scaffold, CI triggers, SPDX on TOML/YAML). D-59 points to lizard. O-13 and O-14 resolved. §8: new M0-30 docs item before M0-02; M0-06 retitled; M0-09 and M0-10 chained after M0-08 because they edit the same workflow file.
+- **v8 (2026-11-18):** Wave B planning. M0 milestone reopened (D-88). Added D-88…D-100 (spike Pi on stock F44 Minimal with Wi-Fi and RPM Fusion, spike code outside the workspace, spike-only CI build + scp, spike languages, agent-written findings, wave B order M0-31 → 12 → 11 → 13 → 14, decode/Slint/CEC/Auvio spike scopes, M0-31 files, Wi-Fi from a boot-partition file). D-66 and D-70 amended; D-82 updated (dev host on Fedora 44). Added O-15 (Slint/libmpv2 versions) and O-16 (sample URLs and YouTube channel identities). §8 Phase B reordered with new M0-31.
