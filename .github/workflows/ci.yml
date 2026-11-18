@@ -1,0 +1,46 @@
+# SPDX-License-Identifier: GPL-3.0-only
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  gate:
+    name: fmt, clippy, test
+    runs-on: ubuntu-24.04-arm
+    container: fedora:44
+    steps:
+      - name: Install build tools
+        run: dnf -y install git gcc rustup
+
+      - uses: actions/checkout@v6
+
+      - name: Install the pinned Rust toolchain
+        run: |
+          rustup-init -y --default-toolchain none --profile minimal
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+          channel="$(sed -n 's/^channel = "\(.*\)"$/\1/p' rust-toolchain.toml)"
+          "$HOME/.cargo/bin/rustup" toolchain install "$channel" --profile minimal --component rustfmt --component clippy
+
+      - uses: actions/cache@v6
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: cargo-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('rust-toolchain.toml', 'Cargo.lock') }}
+
+      - name: cargo fmt
+        run: cargo fmt --all --check
+
+      - name: cargo clippy
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+      - name: cargo test
+        run: cargo test --workspace
