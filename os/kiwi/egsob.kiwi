@@ -96,4 +96,8 @@
 		<package name="grub2-efi-x64-modules" arch="x86_64"/>
 		<package name="shim-signed-x64" arch="x86_64"/>
 	</packages>
+	<packages type="image" patternType="plusRecommended" profiles="VM">
+		<package name="kernel-modules-internal"/>
+		<package name="v4l-utils"/>
+	</packages>
 </image>
