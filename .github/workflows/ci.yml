@@ -80,3 +80,19 @@ jobs:
 
       - name: Check code limits
         run: scripts/check-limits.sh
+
+  shellcheck:
+    name: shellcheck
+    runs-on: ubuntu-24.04-arm
+    container: fedora:44
+    steps:
+      - name: Install ShellCheck
+        run: dnf -y install git ShellCheck
+
+      - uses: actions/checkout@v6
+
+      - name: Trust the workspace for git
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Run shellcheck on every tracked .sh file
+        run: git ls-files -z -- '*.sh' | xargs -0 --no-run-if-empty shellcheck
