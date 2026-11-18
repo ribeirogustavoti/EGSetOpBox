@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: GPL-3.0-only
+[package]
+name = "egsob-api"
+description = "API: axum local API and phone web remote (PIN)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true

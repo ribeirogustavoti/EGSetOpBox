@@ -16,7 +16,15 @@ Under development — milestone M0 (Foundations & spikes).
 
 ## Build
 
-To be written by the workspace scaffold issue (Chat Master §8, M0-02).
+On the x86_64 Fedora dev host:
+
+```sh
+sudo dnf install rustup gcc
+rustup-init -y
+cargo build --workspace
+cargo test --workspace
+cargo run -p egsob-app    # prints "egsob 0.1.0"
+```
 
 ## Legal
 

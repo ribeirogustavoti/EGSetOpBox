@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: GPL-3.0-only
+[workspace]
+resolver = "3"
+members = [
+    "crates/egsob-app",
+    "crates/egsob-core",
+    "crates/egsob-input",
+    "crates/egsob-player",
+    "crates/egsob-addons",
+    "crates/egsob-resolver",
+    "crates/egsob-catalog",
+    "crates/egsob-torrent",
+    "crates/egsob-subtitles",
+    "crates/egsob-epg",
+    "crates/egsob-data",
+    "crates/egsob-api",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.99.1"
+license = "GPL-3.0-only"
+publish = false
+
+[workspace.dependencies]
+egsob-core = { path = "crates/egsob-core" }
+egsob-input = { path = "crates/egsob-input" }
+egsob-player = { path = "crates/egsob-player" }
+egsob-addons = { path = "crates/egsob-addons" }
+egsob-resolver = { path = "crates/egsob-resolver" }
+egsob-catalog = { path = "crates/egsob-catalog" }
+egsob-torrent = { path = "crates/egsob-torrent" }
+egsob-subtitles = { path = "crates/egsob-subtitles" }
+egsob-epg = { path = "crates/egsob-epg" }
+egsob-data = { path = "crates/egsob-data" }
+egsob-api = { path = "crates/egsob-api" }
+
+[workspace.lints]
