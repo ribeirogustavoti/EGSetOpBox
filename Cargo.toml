@@ -36,4 +36,10 @@ egsob-epg = { path = "crates/egsob-epg" }
 egsob-data = { path = "crates/egsob-data" }
 egsob-api = { path = "crates/egsob-api" }
 
-[workspace.lints]
+[workspace.lints.rust]
+unsafe_code = "deny"
+
+[workspace.lints.clippy]
+pedantic = { level = "warn", priority = -1 }
+unwrap_used = "deny"
+expect_used = "deny"
