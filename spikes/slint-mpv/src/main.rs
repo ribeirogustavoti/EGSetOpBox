@@ -2,7 +2,7 @@
 
 use std::{
     cell::RefCell,
-    ffi::CStr,
+    ffi::{CStr, CString},
     os::raw::c_void,
     sync::{Arc, Mutex},
     time::Duration,
@@ -52,22 +52,20 @@ struct RenderState {
     frames: u64,
 }
 
-// Thread-local slot used by proc_addr_trampoline during RenderContext::new().
+// Thread-local slot used by gl_get_proc during RenderContext::new().
 thread_local! {
     static PROC_ADDR: RefCell<Option<Box<dyn Fn(&CStr) -> *const c_void>>> =
         RefCell::new(None);
 }
 
-unsafe extern "C" fn proc_addr_trampoline(
-    _ctx: *mut c_void,
-    name: *const std::os::raw::c_char,
-) -> *mut c_void {
+fn gl_get_proc(_ctx: &(), name: &str) -> *mut c_void {
     PROC_ADDR.with(|slot| {
+        let Ok(cs) = CString::new(name) else {
+            return std::ptr::null_mut();
+        };
         slot.borrow()
             .as_ref()
-            .map_or(std::ptr::null_mut(), |f| {
-                f(unsafe { CStr::from_ptr(name) }) as *mut c_void
-            })
+            .map_or(std::ptr::null_mut(), |f| f(&cs) as *mut c_void)
     })
 }
 
@@ -96,12 +94,6 @@ fn main() {
     mpv.set_property("vo", "libmpv").expect("set vo=libmpv");
     mpv.set_property("hwdec", hwdec.as_str()).expect("set hwdec");
     mpv.set_property("loop-file", "inf").expect("set loop-file");
-    mpv.initialize().expect("initialize mpv");
-
-    // Cast the handle pointer to usize so it can cross the Send boundary
-    // in the rendering-notifier closure. libmpv_handle is designed to be
-    // accessed from any thread.
-    let raw_ctx: usize = unsafe { mpv.ctx.as_ptr() as usize };
     let mpv = Arc::new(mpv);
 
     // ── Slint window ─────────────────────────────────────────────────────────
@@ -116,6 +108,7 @@ fn main() {
         let render_state = render_state.clone();
         let frame_total_n = frame_total.clone();
         let window_weak_n = window_weak.clone();
+        let mpv_arc = mpv.clone();
 
         window
             .window()
@@ -126,40 +119,38 @@ fn main() {
                     };
 
                     // Stash the Slint proc-address function in a thread-local
-                    // so the C trampoline can reach it during RenderContext::new.
+                    // so gl_get_proc can reach it during RenderContext::new.
                     PROC_ADDR.with(|slot| {
                         *slot.borrow_mut() = Some(Box::new(|name: &CStr| {
                             get_proc_address(name)
                         }));
                     });
 
-                    let handle =
-                        unsafe { &mut *(raw_ctx as *mut libmpv2::mpv_handle) };
-
                     let ww = window_weak_n.clone();
-                    let ctx = unsafe {
+                    let mut ctx = unsafe {
                         RenderContext::new(
-                            handle,
+                            &*mpv_arc,
                             vec![
                                 RenderParam::ApiType(RenderParamApiType::OpenGl),
                                 RenderParam::InitParams(OpenGLInitParams {
-                                    get_proc_address: proc_addr_trampoline,
-                                    ctx: std::ptr::null_mut(),
+                                    get_proc_address: gl_get_proc,
+                                    ctx: (),
                                 }),
-                                RenderParam::UpdateCallback(Box::new(move || {
-                                    let _ = slint::invoke_from_event_loop({
-                                        let ww = ww.clone();
-                                        move || {
-                                            if let Some(w) = ww.upgrade() {
-                                                w.window().request_redraw();
-                                            }
-                                        }
-                                    });
-                                })),
                             ],
                         )
                     }
                     .expect("create mpv RenderContext");
+
+                    ctx.set_update_callback(move || {
+                        let _ = slint::invoke_from_event_loop({
+                            let ww = ww.clone();
+                            move || {
+                                if let Some(w) = ww.upgrade() {
+                                    w.window().request_redraw();
+                                }
+                            }
+                        });
+                    });
 
                     // No longer need the proc-address function.
                     PROC_ADDR.with(|slot| *slot.borrow_mut() = None);
