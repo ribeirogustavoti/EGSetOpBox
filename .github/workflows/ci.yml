@@ -61,3 +61,22 @@ jobs:
             echo "::error file=rust-toolchain.toml::pins $pinned but Fedora 44 ships rust $fedora"
             exit 1
           fi
+
+  limits:
+    name: code limits
+    runs-on: ubuntu-24.04-arm
+    container: fedora:44
+    steps:
+      - name: Install limit tools
+        run: |
+          dnf -y install git jq tokei python3-pip
+          pip install --user lizard==1.23.0
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - uses: actions/checkout@v6
+
+      - name: Trust the workspace for git
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Check code limits
+        run: scripts/check-limits.sh
