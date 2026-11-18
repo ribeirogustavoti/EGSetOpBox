@@ -75,4 +75,25 @@ if [[ "${profiles}" == *"Pi"* ]]; then
 	cp -a /usr/share/uboot/rpi_arm64/u-boot.bin /boot/efi/rpi-u-boot.bin
 fi
 
+#--------------------------------------
+# VM: repository shared from the dev host with virtiofs, read-only (D-107)
+#--------------------------------------
+if [[ "${profiles}" == *"VM"* ]]; then
+	mkdir -p /mnt/egsob
+	cat > /etc/systemd/system/mnt-egsob.mount << 'EOF'
+[Unit]
+Description=EGSetOpBox repository shared from the dev host (virtiofs)
+
+[Mount]
+What=egsob
+Where=/mnt/egsob
+Type=virtiofs
+Options=ro,nofail
+
+[Install]
+WantedBy=multi-user.target
+EOF
+	systemctl enable mnt-egsob.mount
+fi
+
 systemctl set-default multi-user.target
