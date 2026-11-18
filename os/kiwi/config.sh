@@ -63,6 +63,12 @@ chmod 0644 /etc/ssh/authorized_keys.d/admin
 systemctl enable sshd.service
 
 #--------------------------------------
+# Wi-Fi from the boot-partition file (D-106)
+#--------------------------------------
+chmod 0755 /usr/libexec/egsob/wifi-import.sh
+systemctl enable egsob-wifi-import.service
+
+#--------------------------------------
 # Raspberry Pi: U-Boot next to the Pi firmware on the ESP
 #--------------------------------------
 if [[ "${profiles}" == *"Pi"* ]]; then

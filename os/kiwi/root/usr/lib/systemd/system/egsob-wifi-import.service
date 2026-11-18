@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: GPL-3.0-only
+[Unit]
+Description=Import Wi-Fi credentials from the boot partition (egsob-wifi.txt)
+Wants=NetworkManager.service
+After=NetworkManager.service
+RequiresMountsFor=/boot/efi
+ConditionPathExists=/boot/efi/egsob-wifi.txt
+
+[Service]
+Type=oneshot
+ExecStart=/usr/libexec/egsob/wifi-import.sh
+
+[Install]
+WantedBy=multi-user.target
