@@ -124,7 +124,7 @@ fn main() {
                     // call; we clear PROC_ADDR immediately after RenderContext::new.
                     PROC_ADDR.with(|slot| {
                         let f: &'static dyn Fn(&CStr) -> *const c_void =
-                            unsafe { std::mem::transmute(get_proc_address) };
+                            unsafe { std::mem::transmute(*get_proc_address) };
                         *slot.borrow_mut() = Some(Box::new(move |name: &CStr| f(name)));
                     });
 
