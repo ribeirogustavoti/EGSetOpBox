@@ -129,7 +129,7 @@ fn main() {
                     let ww = window_weak_n.clone();
                     let mut ctx = unsafe {
                         RenderContext::new(
-                            &*mpv_arc,
+                            &mut *mpv_arc.ctx.as_ptr(),
                             vec![
                                 RenderParam::ApiType(RenderParamApiType::OpenGl),
                                 RenderParam::InitParams(OpenGLInitParams {
