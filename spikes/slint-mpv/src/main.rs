@@ -174,7 +174,7 @@ fn main() {
                             unsafe {
                                 rs.ctx
                                     .0
-                                    .render(0, s.width as i32, s.height as i32, true)
+                                    .render::<()>(0, s.width as i32, s.height as i32, true)
                                     .ok();
                             }
                         }
