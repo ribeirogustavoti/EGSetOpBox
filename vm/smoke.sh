@@ -38,8 +38,8 @@ check_version() {
 	expected="egsob $(cargo metadata --no-deps --format-version 1 --manifest-path "${repo}/Cargo.toml" |
 		jq -r '.packages[] | select(.name == "egsob-app") | .version')"
 	actual="$("${vm}" ssh /mnt/egsob/target/debug/egsob 2>&1 || true)"
-	echo "expected: ${expected} / got: ${actual}"
-	if [[ "${actual}" == "${expected}" ]]; then result version yes; else result version no; fi
+	echo "expected prefix: ${expected} / got: ${actual}"
+	if [[ "${actual}" == "${expected} "* ]]; then result version yes; else result version no; fi
 }
 
 check_cec() {
