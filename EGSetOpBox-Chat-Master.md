@@ -36,7 +36,7 @@ Act as a senior software engineer experienced in embedded Linux, TV/set-top-box 
 | D-03 | OS | Fedora-based, **custom image built with KIWI NG**. Release policy: **pin N-1** → **Fedora 44** (Fedora 45 released 2026-11-03). F44 support ends about one month after Fedora 46 is released; plan the move to the next N-1 then. |
 | D-04 | OS limits | Accept Fedora's limited Pi video acceleration; no custom kernel. |
 | D-05 | Codecs | **RPM Fusion free** enabled in the image (full ffmpeg/libavcodec for mpv). |
-| D-06 | Updates | No field deployment. The box is updated with **`dnf upgrade`** over the network. App RPMs come from **Fedora COPR**. |
+| D-06 | Updates | No field deployment. The box is updated by **re-flashing the KIWI image** (replaced by D-113; no RPM, no COPR). |
 | D-07 | Player | **libmpv**. |
 | D-08 | UI toolkit | **Slint**, used under **GPLv3** (its royalty-free licence excludes embedded systems). |
 | D-09 | Display path | **Direct KMS/DRM**, no compositor. |
@@ -66,7 +66,7 @@ Act as a senior software engineer experienced in embedded Linux, TV/set-top-box 
 | D-33 | Git workflow | **Branch + PR per issue**: branch `issue-<n>-<slug>`, PR body `Closes #<n>`, merged to `main` with a **merge commit** (amended by D-103). |
 | D-34 | PR gate | `cargo fmt --check`, `cargo clippy -D warnings`, `cargo test --workspace`, **code limits check** (≤300 code lines per `.rs`/`.js` file, cyclomatic and cognitive complexity ≤15, tests in separate files — rules in `EGSetOpBox-Code-Master.md`, CODE LIMITS), **VM smoke test** (D-51). |
 | D-35 | Dev host | **x86_64 Fedora** workstation with KVM/QEMU. |
-| D-36 | Builds | **GitHub Actions arm64 runners** for CI builds (gate, test RPM, KIWI image). Release RPMs are built and published by **COPR** (D-06). |
+| D-36 | Builds | **GitHub Actions arm64 runners** for CI builds (gate, aarch64 release binary, KIWI image). No RPM and no COPR (amended by D-113). |
 | D-37 | Logging | **tracing → journald** (`journalctl -u egsob`), log level in settings. |
 | D-38 | Crate prefix | **`egsob-*`**. |
 | D-39 | Master files | Three files at the **repo root**: `EGSetOpBox-Chat-Master.md`, `EGSetOpBox-Code-Master.md`, `EGSetOpBox-Issue-Master.md`. |
@@ -74,7 +74,7 @@ Act as a senior software engineer experienced in embedded Linux, TV/set-top-box 
 | D-41 | Milestones | M0–M9 as listed in §8 (approved). |
 | D-42 | Process model | **Single binary** `egsob`: UI, libmpv, add-ons, resolver, torrent and axum API in one process. (UI and video must share one process anyway: separate processes contending for DRM caused frame drops on Pi 4 in other projects.) |
 | D-43 | Slint renderer | **FemtoVG** (OpenGL ES 2.0) on the **LinuxKMS** backend; libmpv renders through the libmpv OpenGL render API into the same GL context. |
-| D-44 | Rust toolchain | **Edition 2024**. MSRV = the **rustc version shipped in Fedora 44** repos (COPR builds with it); pinned in `rust-toolchain.toml` and checked in CI. |
+| D-44 | Rust toolchain | **Edition 2024**. MSRV = the **rustc version shipped in Fedora 44** repos (the CI release build uses it, D-115); pinned in `rust-toolchain.toml` and checked in CI. |
 | D-45 | Device access | **libseat via systemd-logind**: `egsob.service` runs as user `egsob` with a logind session on tty1 (`PAMName`/`TTYPath`), no root. Slint built with libseat + libinput. `/dev/cec0` reached through a udev rule. M0 spike must confirm logind activates the session (known Fedora kiosk pitfall: "Could not activate session: Permission denied"). |
 | D-46 | Rhai host API (api = 1) | **Minimal + HTML**: `http_get`/`http_post` with headers, JSON, regex, HTML parsing with CSS selectors, logging, return `StreamRef`. No cookies (possible later as `api = 2`). Always-on limits: max operations, call depth, expression depth, string/array/map sizes, per-call wall-clock timeout, `eval` and `import` disabled, per-add-on network allowlist (`net_allow`). |
 | D-47 | EPG sources | **Both**: a GitHub Action in `EGSetOpBox-addons` runs the iptv-org/epg grabber for the installed channels and publishes `guide.xml` (default); a channel add-on may override it with its own XMLTV URL + channel id. The core only downloads and parses XMLTV (no grabber on the box). Channels without data show name only. |
@@ -91,17 +91,17 @@ Act as a senior software engineer experienced in embedded Linux, TV/set-top-box 
 | D-58 | Lints and format | Workspace lints: `clippy::cognitive_complexity` (threshold 15), **`clippy::pedantic` warn**, **`clippy::unwrap_used` and `clippy::expect_used` deny** outside tests, **`unsafe_code` deny** (FFI crates opt in at crate level). `rustfmt.toml` holds `edition = "2024"` only. |
 | D-59 | Code limits tooling | Bash script **`scripts/check-limits.sh`**. `tokei` and `lizard` (D-78) come from **Fedora RPMs where packaged**, otherwise a pinned upstream install (`cargo install --locked`, or `pip` for lizard, D-78). The 300-code-line limit also covers **`.slint`** files. |
 | D-60 | CI runner | GitHub-hosted **`ubuntu-24.04-arm`** running a **`fedora:44` container**; **arm64 only**. **shellcheck** runs on every `.sh` file in the PR gate. |
-| D-61 | COPR | Build from git with **SCM + `make_srpm`** (`.copr/Makefile`). **Networking enabled** in the COPR project (no crate vendoring); `Cargo.lock` committed. Chroot **`fedora-44-aarch64` only**. Builds on **version tags** only. |
-| D-62 | Versioning | **SemVer 0.x**, one version for workspace, RPM and image; tags `vX.Y.Z`. |
-| D-63 | Service user | `egsob` is created **both** by an RPM `sysusers.d` file and in KIWI `config.sh`. |
+| D-61 | COPR | **Dropped** (D-113). `Cargo.lock` stays committed (D-75). |
+| D-62 | Versioning | **SemVer 0.x**, one version for workspace and image; tags `vX.Y.Z` (amended by D-113). |
+| D-63 | Service user | `egsob` is created **in the KIWI image** (M0-27); no RPM (amended by D-113). |
 | D-64 | Service restart | `egsob.service`: `Restart=always`, `RestartSec=2`. |
-| D-65 | KIWI builds | Pi image (aarch64) built in **CI on tag** and published as a **GitHub Release asset** (`.raw.xz`); the dev host can also build it (aarch64 via qemu-user-static). An **x86_64 profile** of the same description, built **on the dev host only**, is the smoke-test VM image. |
+| D-65 | KIWI builds | Pi image (aarch64) built in **CI on tag** and published as a **GitHub Release asset** (`.raw.xz`); the tag workflow also builds the aarch64 `egsob` binary that the image embeds (D-115). The dev host can also build it with `kiwi-ng system boxbuild` (D-105); if CI cannot build the image, the engineer builds it on the dev host and uploads it (D-116). An **x86_64 profile** of the same description, built **on the dev host only**, is the smoke-test VM image. |
 | D-66 | Image contents | Boot chain = **Fedora default** (Pi firmware → U-Boot → UEFI → GRUB). Root FS **btrfs**. `en_US.UTF-8`, `Europe/Brussels`, hostname `egsob`. **sshd on, key-only**; the engineer's public key is committed in `os/kiwi/`. Accounts per D-104. **Wi-Fi from a boot-partition file** (amended by D-100): after flashing, the engineer copies a small file with SSID and password onto the card's FAT boot partition; a first-boot service imports it into NetworkManager and deletes the file. Credentials are never in the image. |
 | D-67 | Audio | **ALSA direct** (mpv `ao=alsa`) to HDMI; no sound server. |
-| D-68 | Display | Bravia on **HDMI0** (`/dev/cec0` expected). KMS output **3840×2160@30**; video stays 1080p (D-02) and is scaled. |
-| D-69 | VMs | x86_64 VM: KIWI x86_64 profile, **`virtio-vga-gl` + virgl**, `-display egl-headless`; `egsob` is **built on the dev host and shared** into the VM (virtiofs/9p). aarch64 VM: QEMU **`virt` + edk2 UEFI** (userspace/RPM checks, not Pi firmware boot). Scripts are **Bash + shellcheck**. |
+| D-68 | Display | Bravia on **HDMI0** (`/dev/cec0` expected). KMS output **3840×2160@30**; video stays 1080p (D-02) and is scaled. The Pi kernel command line is `console=tty1 quiet`, so the console and initial-setup appear on the Bravia (M0-34, #45). |
+| D-69 | VMs | x86_64 VM: KIWI x86_64 profile, **`virtio-vga-gl` + virgl**, `-display egl-headless`; `egsob` is **built on the dev host and shared** into the VM (virtiofs/9p). aarch64 VM: QEMU **`virt` + edk2 UEFI** (image userspace checks, not Pi firmware boot; pass rule D-117). Scripts are **Bash + shellcheck**. |
 | D-70 | Spikes | Format per Issue Master §5.4. Agent writes the code; **engineer runs it** on the Pi, which runs the **stock Fedora 44 aarch64** image until the KIWI image exists. **Two PRs per spike:** the code PR is closed unmerged (branch kept); the findings PR merges `docs/spikes/<name>.md` and the Chat Master update. Slint spike uses the **`libmpv2` crate**; must show 1080p H.264 with **no visible stutter** (judged by eye on the Bravia, amended by D-96), UI ≥30 fps over video at 4K30 (read from an on-screen fps counter), and running as `egsob` via logind on tty1 without root (D-45). Decode spike: public sample files fetched by its script. CEC spike keys: D-pad/OK/Back, Play/Pause/Stop/FF/RW, CH+/CH−, digits. Auvio spike: run by the engineer with his own account; credentials never committed. |
-| D-71 | M0 exit | All M0 items closed; the Pi boots the KIWI image and `egsob.service` shows the **placeholder screen** on the Bravia; spike findings recorded (O-04 resolved, D-50 settled, CEC and Slint findings in §3); tag `v0.1.0` builds in COPR and `dnf upgrade` on the Pi pulls it. **No due date.** |
+| D-71 | M0 exit | All M0 items closed; the Pi boots the KIWI image and `egsob.service` shows the **placeholder screen** on the Bravia; spike findings recorded (O-04 resolved, D-50 settled, CEC and Slint findings in §3); tag `v0.1.0` builds the image (CI, or the engineer's upload per D-116) as a GitHub Release asset, the flashed Pi shows the placeholder screen, and `vm/smoke.sh` passes on the tagged build (amended by D-113). **No due date.** |
 | D-72 | README | Summary + GPL-3.0-only + private-use note; pointers to the three masters; legal note (content-agnostic torrent/Stremio, no DRM circumvention); a **Build** section filled by the workspace scaffold issue. |
 | D-73 | Claude Code config | Repo root `CLAUDE.md` points the agent to the three masters and restates the no-attribution rule; `.claude/settings.json` sets `"attribution": {"commit": "", "pr": ""}` so Claude Code adds no trailer or PR footer. |
 | D-74 | Planning sessions | Planning chats draft the milestone and its issues **and create them on GitHub**, and the issues must be correct when the session ends; the engineer does no clean-up. Any session that writes to GitHub runs in **Claude Code on the dev host** with the engineer's own `gh` login and attribution off (`~/.claude/settings.json` and D-73). Cloud sessions that add attribution to GitHub writes never write to GitHub. Drafts are delivered as **body-only files**; title, milestone and assignee are given separately. No automated attribution check. |
@@ -119,28 +119,36 @@ Act as a senior software engineer experienced in embedded Linux, TV/set-top-box 
 | D-86 | CI runs | The CI workflow runs on **pull requests to `main`** and **pushes to `main`**. A CI issue is accepted when its own PR run is green. |
 | D-87 | SPDX on config | Every TOML and YAML file (Cargo manifests, toolchain/rustfmt/clippy config, GitHub workflows, KIWI/YAML config) starts with `# SPDX-License-Identifier: GPL-3.0-only`. Markdown, JSON, `.gitignore` and `LICENSE` carry none. |
 | D-88 | M0 reopened | The GitHub milestone `M0 — Foundations & spikes` was closed with only Phase A done (#1–#11). It is **reopened**; phases B–E are finished **in M0**. M1 issues are dispatched only after the D-71 exit. M1 planning is deferred to a later session. |
-| D-89 | Spike Pi | The Pi runs the **stock Fedora 44 Minimal aarch64** image, written to the microSD with an image writer. Network: **Wi-Fi only**, joined at first boot with a **keyboard on the Pi**. **RPM Fusion free** is enabled and full ffmpeg replaces ffmpeg-free (as D-05). The `egsob` user, the tty1 logind service unit for M0-11 and a **temporary `/dev/cec0` udev rule** for M0-13 are set up **by hand** following `docs/pi-setup.md` (added by M0-31). |
+| D-89 | Spike Pi | The Pi runs the **stock Fedora 44 Minimal aarch64** image, written to the microSD with an image writer. Network: **Wi-Fi only**, joined at first boot with a **keyboard on the Pi**. **RPM Fusion free** is enabled and full ffmpeg replaces ffmpeg-free (as D-05). The `egsob` user, the tty1 logind service unit for M0-11 and a **temporary `/dev/cec0` udev rule** for M0-13 are set up **by hand** following `docs/pi-setup.md` (added by M0-31). Amended by D-111: the spikes run on the **KIWI image**. |
 | D-90 | Spike code | Spike code lives in `spikes/<name>/`, **outside the Cargo workspace**, and does **not** have to pass the gate. Red **code limits** and **shellcheck** checks on spike code PRs are accepted (the PRs are never merged). |
 | D-91 | Spike builds | Rust spikes are built by a **spike-only workflow file** on the spike branch (`ubuntu-24.04-arm` + `fedora:44`, Fedora's own `mpv-devel`, 0.41.0 in F44). The engineer downloads the artifact with the browser on the dev host and copies it to the Pi with `scp`. Nothing is added to `main`. |
 | D-92 | Spike languages | M0-11: **Rust** (Slint + `libmpv2`). M0-12: **shell** driving the `mpv` CLI. M0-13: **shell** with `cec-ctl`. M0-14: **manual Firefox procedure + shell** manifest checker. |
 | D-93 | Spike findings | The engineer supplies script logs and notes; **Claude Code writes** `docs/spikes/<name>.md` and the Chat Master update in the findings PR. |
-| D-94 | Wave B | Wave B = M0-31 then the spikes **one by one in the order M0-12 → M0-11 → M0-13 → M0-14**; each spike starts after the previous spike's findings PR is merged. Wave B bodies are drafted per D-80. Spike runs and findings are **deferred** (D-101). |
+| D-94 | Wave B | Wave B = M0-31 then the spikes **one by one in the order M0-12 → M0-11 → M0-13 → M0-14**; each spike starts after the previous spike's findings PR is merged. Wave B bodies are drafted per D-80. Spike runs and findings are **deferred** (D-101) and resume per D-111. |
 | D-95 | Decode spike (M0-12) | Samples: **H.264 1080p, HEVC 1080p and 4K, VP9 1080p** (public URLs proposed by the planning chat, approved by the engineer — O-16) and **AV1 1080p, encoded on the dev host** from the H.264 sample with ffmpeg (SVT-AV1) and copied to the Pi. hwdec modes on every sample: **`no`, `v4l2m2m-copy`, `drm-copy`, `v4l2m2m`, `drm`** (never `auto`). Outputs: **`vo=gpu` with `gpu-context=drm`** and **`vo=drm`**. About 1 minute per run, unattended. YouTube: the D-49 `yt-dlp_linux_aarch64` binary lists formats (`-F`) and plays the H.264 ≤1080p format for the lives of **Euronews, Jovem Pan News, DW News and Revista Oeste** (channel identities proposed by the planning chat, approved by the engineer — O-16). Report: **script log + engineer notes** (smooth/stutter per run). |
 | D-96 | Slint spike (M0-11) | Runs **after M0-12** and uses its hwdec finding. Plays a **public 1080p H.264 sample**. The Slint overlay is an **animated moving bar + on-screen fps counter**. Pass is judged **visually**: no visible stutter, and the fps counter shows ≥30 at 4K30. Amends D-70. |
 | D-97 | CEC spike (M0-13) | Keys: the D-70 list only. Claims a **playback** device address, then repeats the key test as a **tuner**, and compares. Also records **TV standby, power-on, active source and input switching**. Runs as **`egsob`** with the temporary udev rule (D-89). |
 | D-98 | Auvio spike (M0-14) | The engineer opens La Une, Tipik and La Trois live in **Firefox on the dev host** while logged in and copies the manifest URLs; a shell script reports DRM markers and stream format. Also tries **yt-dlp's RTBF extractor** with and without the engineer's login cookies (cookie file never committed). If DRM-free, the streams are also **played on the Pi** with mpv. |
 | D-99 | Wave B docs issue | **M0-31** `Docs — record wave B planning decisions` changes `EGSetOpBox-Chat-Master.md`, `EGSetOpBox-Code-Master.md` and `docs/pi-setup.md` (NEW). Within the ≤3-file cap, so **no waiver**. AC: masters updated, `docs/pi-setup.md` present, markdown renders, gate line. |
 | D-100 | Wi-Fi in the KIWI image | Amends D-66: Wi-Fi comes from a **file on the FAT boot partition**, imported and deleted at first boot. Implemented by M0-33 (D-106). |
-| D-101 | Spike findings deferred | No Pi run, log, test or finding is requested from the engineer before the KIWI image exists (M0-15). Spike runs (M0-12, M0-11, M0-13, M0-14) and their findings PRs happen **after the image boots on the Pi** (M0-33); issues #23–#26 stay open until then. The spikes then run on the KIWI image instead of the stock image (D-89); `docs/pi-setup.md` is revisited at that time. O-04, O-15 and O-16 stay open until those findings merge. |
+| D-101 | Spike findings deferred | No Pi run, log, test or finding is requested from the engineer before the KIWI image exists (M0-15). Spike runs (M0-12, M0-11, M0-13, M0-14) and their findings PRs happen **after the image boots on the Pi** (M0-33); issues #23–#26 stay open until then. The spikes then run on the KIWI image instead of the stock image (D-89); `docs/pi-setup.md` is revisited at that time. O-04, O-15 and O-16 stay open until those findings merge. The wait ended on 2026-11-19 (D-111). |
 | D-102 | CEC spike code on `main` | `spikes/cec/run.sh` was merged by PR #30. One-off exception to D-70/D-90: it stays on `main` as spike code (not production, no crate depends on it) and passes shellcheck. |
 | D-103 | Merge method | PRs are merged with **merge commits**, as done since wave A. Amends D-33 and D-52. Direct pushes to `main` stay exceptions (D-81). |
 | D-104 | Image accounts | The image creates **no login user**. On first boot, Fedora's **text initial-setup** (USB keyboard + TV on the Pi; serial console in the VM) creates user **`admin`** with a password, marked administrator (`wheel`, sudo with password). The engineer's SSH key is preset in `/etc/ssh/authorized_keys.d/admin`; sshd allows **keys only**, no root login. **Root stays locked.** Applies to the Pi and the VM. Amends D-66. |
-| D-105 | KIWI description | Own description in `os/kiwi/` (`egsob.kiwi`, `config.sh`, `editbootinstall_rpi.sh`, `root/` overlay), modelled on Fedora's KIWI descriptions (`BootDiskCore` aarch64 disk type: MBR, FAT ESP set to type 0x06, U-Boot copied to `rpi-u-boot.bin`, `bcm283x-firmware`, btrfs root). Profiles **`Pi`** (aarch64 raw disk) and **`VM`** (x86_64 qcow2). Built on the dev host with `kiwi-ng` (aarch64 through `--target-arch` + qemu-user-static); outputs in **`~/.cache/egsob/`**, never committed. Keyboard layout `us`. |
+| D-105 | KIWI description | Own description in `os/kiwi/` (`egsob.kiwi`, `config.sh`, `editbootinstall_rpi.sh`, `root/` overlay), modelled on Fedora's KIWI descriptions (`BootDiskCore` aarch64 disk type: MBR, FAT ESP set to type 0x06, U-Boot copied to `rpi-u-boot.bin`, `bcm283x-firmware`, btrfs root). Profiles **`Pi`** (aarch64 raw disk) and **`VM`** (x86_64 qcow2). Built on the dev host with `kiwi-ng`; the `Pi` profile with **`system boxbuild`** (`--box universal --aarch64 --machine virt --cpu cortex-a72 --box-smp-cpus 4 --box-memory 8G --no-accel`, as in M0-34/#45); outputs in **`~/.cache/egsob/`**, never committed. Keyboard layout `us`. |
 | D-106 | Wi-Fi file | Refines D-100: file **`egsob-wifi.txt`** in the root of the FAT ESP (`/boot/efi` on the box) with lines `SSID=<name>` and `PSK=<passphrase>`. `egsob-wifi-import.service` runs at every boot when the file exists, creates the NetworkManager connection `egsob-wifi` with `nmcli`, and deletes the file. The passphrase is never logged. |
 | D-107 | Smoke-test VM | **4 vCPU, 4 GB RAM**, KVM, q35, UEFI (edk2 OVMF), `virtio-vga-gl` + `egl-headless`. `vm/run-x86.sh` copies the built image once to a **persistent disk** `~/.cache/egsob/vm/x86_64.qcow2`; `firstboot` runs initial-setup on the **serial console** in the terminal; every later run uses a **throwaway overlay**. The repository is shared with **virtiofs** and mounted read-only at `/mnt/egsob` (binary: `/mnt/egsob/target/debug/egsob`). SSH via host port 2222; QMP socket for `screendump`. A rebuilt image needs `init` + `firstboot` again. In the VM only, `vivid` loads at boot and `/dev/cec*` belongs to group `wheel` (mode 0660), so the smoke test needs no sudo. |
 | D-108 | Smoke test scope | `vm/smoke.sh` today checks: the VM boots, `egsob` prints `egsob <version>`, a vivid CEC key round-trip (TV adapter → playback adapter), collects the journal and saves a PNG screendump. Checks grow with later issues (D-51). |
 | D-109 | Wave C | Wave C = **M0-32 → M0-15 → M0-33 → M0-16 → M0-17 → M0-18 → M0-19**, one by one, each after the previous one merges. M0-15 is accepted on a successful build on the dev host; the first Pi boot is M0-33. |
 | D-110 | Phase D blocked items | M0-20 and M0-21 wait for the M0-11 findings, and M0-22 waits for the M0-13 findings (D-101). |
+| D-111 | Spikes on the KIWI image | Amends D-89 and ends the D-101 wait: the Pi booted the KIWI image on 2026-11-19. The spikes run on that image (32 GB microSD, **Wi-Fi only**, user `admin`). By hand, following `docs/pi-setup.md` (rewritten by M0-35): `dnf upgrade`, RPM Fusion free + full ffmpeg, the spike packages, user `egsob`, the temporary `/dev/cec0` udev rule and the tty1 spike unit. **SELinux stays enforcing**; any denial is a spike finding. After all four spikes, the card is **re-flashed** with a fresh image. |
+| D-112 | Wave D | Wave D = **M0-35**, then the spike runs in the D-94 order (M0-12 → M0-11 → M0-13 → M0-14), each after the previous findings PR merges. Phase D bodies are drafted in the **next planning session**, once the M0-12, M0-11 and M0-13 findings have merged; M0-14 does not block that session. |
+| D-113 | Software delivery | **No RPM and no COPR, permanently.** The aarch64 `egsob` binary, `egsob.service`, the `/dev/cec0` udev rule and the `egsob` user are **embedded in the KIWI image**. The box is updated by **re-flashing** the image. Replaces D-06 and D-61; amends D-36, D-44, D-62, D-63, D-65, D-69 and D-71. Items M0-23, M0-24 and M0-25 are removed from §8. |
+| D-114 | Image file locations | `egsob.service` and the udev rule live **directly in the KIWI overlay** (`os/kiwi/root/…`); exact paths are set when M0-21 and M0-22 are drafted. `packaging/` and `.copr/` are removed from §4.2. |
+| D-115 | Binary into the image | CI builds the **aarch64 release binary on tag** (M0-37) and the image build takes it from that artifact. On the dev host, the engineer downloads the artifact before building the image. Its path in the image is set when M0-27 is drafted. |
+| D-116 | Image CI fallback | If KIWI cannot build the Pi image on the hosted arm64 runner, M0-28 becomes a release workflow that attaches an image the **engineer built on the dev host** (D-105). |
+| D-117 | aarch64 VM pass rule | M0-29 passes when the image boots in the aarch64 QEMU VM, first boot completes on the serial console, and **key-only SSH as `admin`** works through a forwarded port. |
+| D-118 | Placeholder build info | The placeholder screen (M0-20) shows **name, version, git short hash and build date**. A `build.rs` runs `git` and falls back to `unknown`. Build info is a separate item, **M0-36**, so M0-20 needs no cap waiver. |
  
 ---
  
@@ -172,7 +180,7 @@ Act as a senior software engineer experienced in embedded Linux, TV/set-top-box 
 │  └───────────────────────────────────────────────────────────────────┘  │
 │  /var/lib/egsob: egsob.db · secret.key (0600) · addons/ · yt-dlp/       │
 └─────────────────────────────────────────────────────────────────────────┘
-        ▲ dnf upgrade (COPR)        ▲ add-on index (GitHub EGSetOpBox-addons)
+        ▲ re-flash image (GitHub Release)   ▲ add-on index (GitHub EGSetOpBox-addons)
 ```
  
 Process model: **single binary** (D-42); the crates above are libraries linked into `egsob-app`.
@@ -187,7 +195,6 @@ EGSetOpBox/
 ├── README.md  LICENSE  CLAUDE.md  .claude/settings.json
 ├── Cargo.toml  Cargo.lock     # workspace
 ├── rust-toolchain.toml  rustfmt.toml  clippy.toml
-├── .copr/Makefile             # COPR make_srpm
 ├── scripts/                   # check-limits.sh and other gate scripts
 ├── crates/
 │   ├── egsob-app/  egsob-core/  egsob-input/  egsob-player/
@@ -195,9 +202,7 @@ EGSetOpBox/
 │   ├── egsob-subtitles/  egsob-epg/  egsob-data/  egsob-api/
 ├── ui/                        # .slint files, translations (gettext .po)
 ├── web-remote/                # static phone remote page served by egsob-api
-├── packaging/rpm/egsetopbox.spec
-├── packaging/systemd/egsob.service
-├── os/kiwi/                   # KIWI description (Pi aarch64 + x86_64 VM profile)
+├── os/kiwi/                   # KIWI description (Pi aarch64 + x86_64 VM profile); root/ overlay holds egsob.service and the udev rule (D-114)
 ├── vm/                        # KVM x86_64 + QEMU aarch64 scripts
 ├── .github/workflows/
 └── docs/spikes/               # spike findings
@@ -260,9 +265,9 @@ net_allow = ["example-broadcaster.tld"]   # network allowlist for the script
 | YouTube | yt-dlp (self-managed copy) |
 | CEC | Linux CEC API (`/dev/cec0`), `cec-ctl` from v4l-utils for diagnostics |
 | OS image | KIWI NG (Fedora descriptions as reference); Pi boot needs the first partition FAT, bootable |
-| Packaging | RPM spec, COPR |
+| Delivery | KIWI image with the embedded `egsob` binary; updates by re-flashing (D-113) |
 | CI | GitHub Actions (arm64 runners) |
-| VMs | x86_64 KVM VM (fast UI/logic smoke tests); aarch64 QEMU TCG VM (image/RPM validation, slow); CEC simulated with the kernel `vivid` driver |
+| VMs | x86_64 KVM VM (fast UI/logic smoke tests); aarch64 QEMU TCG VM (image validation, slow); CEC simulated with the kernel `vivid` driver |
 | Real hardware | Pi 4B on the Bravia (video decode, CEC, performance) |
  
 ---
@@ -272,6 +277,7 @@ net_allow = ["example-broadcaster.tld"]   # network allowlist for the script
 - Fedora's Pi video acceleration is limited; HEVC hardware decode depends on the upstream Pi HEVC driver. Plan for 1080p H.264.
 - KMS/DRM without a compositor: the UI and mpv must share one GL context (libmpv render API inside Slint) — validated in spike M0.
 - yt-dlp breaks when YouTube changes; mitigated by self-update (D-19).
+- Re-flashing for every update (D-113) wipes `/var/lib/egsob` (database, secret key, add-ons) unless it is backed up first.
 - microSD write endurance: no torrent disk cache; consider volatile journald later if needed.
 - OpenSubtitles free quota is limited per day.
 - Legal: the torrent engine and Stremio bridge are content-agnostic; the box ships no infringing sources.
@@ -285,7 +291,7 @@ net_allow = ["example-broadcaster.tld"]   # network allowlist for the script
 | O-01 | ~~Exact Fedora release number for "N-1".~~ **Resolved → D-03 (Fedora 44).** | — |
 | O-02 | ~~Process model.~~ **Resolved → D-42 (single binary).** | — |
 | O-03 | ~~Slint renderer on KMS/DRM.~~ **Resolved → D-43 (FemtoVG).** | — |
-| O-04 | mpv hwdec policy on Fedora 44/Pi. Spike must check: whether Fedora's kernel exposes the Pi H.264 (`v4l2m2m-copy`) and HEVC (`drm-copy`) decoders; that `hwdec=auto` is **not** used (its whitelist skips both and falls back to software silently); whether yt-dlp should prefer H.264 ≤1080p, since YouTube usually serves VP9/AV1, which the Pi 4 can't decode in hardware. | M0 spike `Spike — hardware video decode reality check on Fedora/Pi` (deferred, D-101) |
+| O-04 | mpv hwdec policy on Fedora 44/Pi. Spike must check: whether Fedora's kernel exposes the Pi H.264 (`v4l2m2m-copy`) and HEVC (`drm-copy`) decoders; that `hwdec=auto` is **not** used (its whitelist skips both and falls back to software silently); whether yt-dlp should prefer H.264 ≤1080p, since YouTube usually serves VP9/AV1, which the Pi 4 can't decode in hardware. | M0 spike `Spike — hardware video decode reality check on Fedora/Pi` (runs per D-111) |
 | O-05 | ~~Rust edition and MSRV.~~ **Resolved → D-44 (edition 2024, Fedora 44 rustc).** | — |
 | O-06 | ~~Device access.~~ **Resolved → D-45 (libseat + logind).** | — |
 | O-07 | ~~Rhai host API and limits.~~ **Resolved → D-46 (Minimal + HTML).** | — |
@@ -296,8 +302,8 @@ net_allow = ["example-broadcaster.tld"]   # network allowlist for the script
 | O-12 | ~~VM smoke test definition.~~ **Resolved → D-51 (scripted + checklist, run by the engineer).** | — |
 | O-13 | ~~Exact rustc version in Fedora 44.~~ **Resolved → 1.99.1** (Fedora 44 updates, 2026-10-19, from the Fedora package pages). Later drift is caught by the M0-08 CI check (D-77). | — |
 | O-14 | ~~Tool availability.~~ **Resolved:** Fedora 44 ships `tokei` 15.0.0 (JSON output built in; Slint is in tokei's language list, and M0-06's AC verifies the Fedora build counts `.slint`) and `ShellCheck` 0.11.0; `lizard` is not packaged (→ pip, D-78). | — |
-| O-15 | Slint and `libmpv2` crate versions for M0-11 (latest stable Slint last seen: 1.18.1, 2026-09-21) and their MSRV against 1.99.1. Verify at M0-11 drafting. | M0-11 findings (deferred, D-101) |
-| O-16 | Public sample URLs for M0-12 (D-95) and the YouTube channel identities of Euronews, Jovem Pan News, DW News and Revista Oeste. The planning chat researches them; the engineer approves before the issue is created. | M0-12 run (deferred, D-101) |
+| O-15 | Slint and `libmpv2` crate versions for M0-11 (latest stable Slint last seen: 1.18.1, 2026-09-21) and their MSRV against 1.99.1. Verify at M0-11 drafting. | M0-11 findings (runs per D-111) |
+| O-16 | Public sample URLs for M0-12 (D-95) and the YouTube channel identities of Euronews, Jovem Pan News, DW News and Revista Oeste. The planning chat researches them; the engineer approves before the issue is created. | M0-12 run (runs per D-111) |
  
 ---
  
@@ -327,7 +333,7 @@ Items are listed **in implementation order** (phases A → E). `Deps` names the 
 | M0-09 | `CI — run code limits script in the PR workflow` | E0.2 | 06, 08 |
 | M0-10 | `CI — shellcheck on all shell scripts` | E0.2 | 09 |
  
-**Phase B — Spikes** (D-70: code PR closed unmerged; findings PR merges `docs/spikes/` + Chat Master). Order and rules: D-89…D-99.
+**Phase B — Spikes** (D-70: code PR closed unmerged; findings PR merges `docs/spikes/` + Chat Master). Order and rules: D-89…D-99; runs on the KIWI image per D-111.
  
 | ID | Title | Epic | Deps |
 |---|---|---|---|
@@ -348,29 +354,30 @@ Items are listed **in implementation order** (phases A → E). `Deps` names the 
 | M0-17 | `VM — x86_64 KVM VM script for smoke tests` (D-107) | E0.5 | 16 |
 | M0-18 | `VM — vivid CEC emulation setup` | E0.5 | 17 |
 | M0-19 | `VM — smoke test script (start egsob, send CEC keys, check journal, screenshot)` (D-108) | E0.5 | 18 |
+| M0-34 | `KIWI — use the HDMI console (tty1) on the Pi` (#45; D-68, D-105) | E0.4 | 19 |
  
-**Phase D — App & packaging**
- 
+**Phase D — App & image files.** Order and rules: D-110…D-118. Bodies after M0-12, M0-11 and M0-13 findings (D-112).
+
 | ID | Title | Epic | Deps |
 |---|---|---|---|
-| M0-20 | `App — placeholder Slint screen with name and version on KMS` (waits for M0-11 findings, D-110) | E0.1 | 11, 19 |
-| M0-21 | `Packaging — systemd unit egsob.service` (waits for M0-11 findings, D-110) | E0.3 | 11 |
-| M0-22 | `Packaging — udev rule for /dev/cec0` (waits for M0-13 findings, D-110) | E0.3 | 13 |
-| M0-23 | `Packaging — RPM spec for egsetopbox` (binary, unit, udev rule, sysusers.d) | E0.3 | 20, 21, 22 |
-| M0-24 | `CI — build test RPM in Fedora container` | E0.2 | 07, 23 |
-| M0-25 | `COPR — project setup and build-from-git configuration` | E0.3 | 23 |
- 
+| M0-35 | `Docs — record wave D planning decisions` | E0.1 | 34 |
+| M0-36 | `App — build info (git short hash, build date) via build.rs` (D-118) | E0.1 | 19 |
+| M0-20 | `App — placeholder Slint screen with name, version and build info on KMS` (waits for M0-11 findings, D-110) | E0.1 | 11, 36 |
+| M0-21 | `KIWI — egsob.service unit in the image overlay` (waits for M0-11 findings, D-110; D-114) | E0.3 | 11 |
+| M0-22 | `KIWI — udev rule for /dev/cec0 in the image overlay` (waits for M0-13 findings, D-110; D-114) | E0.3 | 13 |
+
 **Phase E — Pi image & release**
- 
+
 | ID | Title | Epic | Deps |
 |---|---|---|---|
-| M0-26 | `KIWI — enable RPM Fusion free and COPR repos` | E0.4 | 15, 25 |
-| M0-27 | `KIWI — create egsob user, autostart service, network (Ethernet + Wi-Fi)` | E0.4 | 26 |
-| M0-28 | `CI — build KIWI image on tag and attach to GitHub Release` | E0.2 | 27 |
-| M0-29 | `VM — aarch64 QEMU script booting the KIWI image` | E0.5 | 27 |
- 
-Release step (engineer, not an issue): tag `v0.1.0` → COPR build + release image → flash the Pi → verify the D-71 exit criteria.
- 
+| M0-26 | `KIWI — enable RPM Fusion free (full ffmpeg)` | E0.4 | 15 |
+| M0-37 | `CI — build the aarch64 release binary on tag` (D-115) | E0.2 | 07, 20 |
+| M0-27 | `KIWI — egsob user, binary from the CI artifact, autostart, network (Ethernet + Wi-Fi)` (D-113, D-115) | E0.4 | 21, 22, 26, 37 |
+| M0-28 | `CI — build KIWI image on tag and attach to GitHub Release` (fallback D-116) | E0.2 | 27 |
+| M0-29 | `VM — aarch64 QEMU script booting the KIWI image` (D-117) | E0.5 | 27 |
+
+Release step (engineer, not an issue): tag `v0.1.0` → CI builds the binary and the release image (or the engineer uploads it, D-116) → flash the Pi → verify the D-71 exit criteria.
+
 ### M1 — Player core
 - **E1.1 Player**
   - `Player — libmpv wrapper crate egsob-player`
@@ -504,3 +511,4 @@ when the session ends.
 - **v8 (2026-11-18):** Wave B planning. M0 milestone reopened (D-88). Added D-88…D-100 (spike Pi on stock F44 Minimal with Wi-Fi and RPM Fusion, spike code outside the workspace, spike-only CI build + scp, spike languages, agent-written findings, wave B order M0-31 → 12 → 11 → 13 → 14, decode/Slint/CEC/Auvio spike scopes, M0-31 files, Wi-Fi from a boot-partition file). D-66 and D-70 amended; D-82 updated (dev host on Fedora 44). Added O-15 (Slint/libmpv2 versions) and O-16 (sample URLs and YouTube channel identities). §8 Phase B reordered with new M0-31; one-off cap waiver for M0-11 recorded in §8. D-95: AV1 sample encoded on the dev host.
 - **v9 (2026-11-18):** Wave C planning. Added D-101…D-110 (spike runs and findings deferred until the KIWI image boots; CEC spike code kept on `main`; merge commits; image accounts via text initial-setup with `admin` and preset SSH key; own KIWI description with `Pi`/`VM` profiles built on the dev host into `~/.cache/egsob/`; Wi-Fi file format; smoke-test VM; smoke test scope; wave C order; Phase D items waiting for findings). D-33, D-52, D-66, D-80, D-94 and D-100 amended. O-04/O-15/O-16 marked deferred. §8 Phase C adds M0-32 and M0-33; Phase D notes the blocked items.
  
+- **v10 (2026-11-19):** Wave D planning. Added D-111…D-118 (spikes run on the KIWI image with SELinux enforcing and a re-flash afterwards; wave D order; no RPM and no COPR, software embedded in the image and updated by re-flashing; unit and udev rule in the KIWI overlay; aarch64 binary from CI on tag; image CI fallback; aarch64 VM pass rule; placeholder build info as M0-36). D-06 and D-61 replaced; D-36, D-44, D-62, D-63, D-65, D-69, D-71, D-89, D-94 and D-101 amended. D-68 and D-105 record #45 (`console=tty1`) and the `system boxbuild` build method. §4.1, §4.2, §5 and §6 updated for the delivery change. §8: Phase C adds M0-34 (#45); Phase D/E rewritten with M0-35…M0-37; M0-23…M0-25 removed. O-04/O-15/O-16 now run per D-111.
