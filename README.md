@@ -23,7 +23,7 @@ sudo dnf install rustup gcc
 rustup-init -y
 cargo build --workspace
 cargo test --workspace
-cargo run -p egsob-app    # prints "egsob 0.1.0"
+cargo run -p egsob-app    # prints "egsob 0.1.0 (<git hash>, <build time> UTC)"
 ```
 
 ## Legal
