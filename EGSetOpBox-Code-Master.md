@@ -48,7 +48,7 @@ cargo clippy --workspace --all-targets -- -D warnings
 cargo test --workspace
 ```
  
-Plus **`shellcheck`** on every added or changed `.sh` file, the **code limits check** (see CODE LIMITS: file size ≤300 code lines, cyclomatic and cognitive complexity ≤15, no inline tests), and, for runtime-behavior changes, the **VM smoke test**, which the engineer runs at review (see WORKFLOW step 6). Non-Rust issues (KIWI, CI, RPM) run the verification command stated in their AC.
+Plus **`shellcheck`** on every added or changed `.sh` file, the **code limits check** (see CODE LIMITS: file size ≤300 code lines, cyclomatic and cognitive complexity ≤15, no inline tests), and, for runtime-behavior changes, the **VM smoke test**, which the engineer runs at review (see WORKFLOW step 6). Non-Rust issues (KIWI, CI) run the verification command stated in their AC.
  
 ---
  
@@ -58,9 +58,9 @@ Plus **`shellcheck`** on every added or changed `.sh` file, the **code limits ch
 |---|---|---|
 | Dev host | x86_64 Fedora, KVM/QEMU | Edit, unit tests, x86_64 builds |
 | x86_64 KVM VM | Fast UI/logic smoke tests | Same Fedora release as the image; virtio-gpu; scripts in `vm/` |
-| aarch64 QEMU VM (TCG) | Validate KIWI image boot and RPM install | Slow (pure emulation): image-level checks only |
+| aarch64 QEMU VM (TCG) | Validate KIWI image boot | Slow (pure emulation): image-level checks only |
 | CEC simulation | Input tests without a TV | Kernel `vivid` driver; `cec-ctl` to inject key presses |
-| GitHub Actions arm64 | CI gate, test RPM, KIWI image | Runs on every PR |
+| GitHub Actions arm64 | CI gate, aarch64 release binary, KIWI image | Runs on every PR |
 | Raspberry Pi 4B + Bravia | Real decode, CEC, performance | Engineer-run when the AC say "on the Pi" |
  
 Logs: `journalctl -u egsob -f` (tracing → journald).
@@ -69,7 +69,7 @@ Logs: `journalctl -u egsob -f` (tracing → journald).
  
 ## CODE LIMITS (hard rules — a violation fails the gate)
  
-1. **File size:** no Rust (`.rs`), JavaScript (`.js`) or Slint (`.slint`) file may exceed **300 lines of code**. Only code lines count; blank lines and comments do not (measured with `tokei`). This applies to production and test files alike. If an issue would push a file past the limit, stop and report it: the issue must be split or turned into a split refactor (Issue Master §5.1).
+1. **File size:** no Rust (`.rs`), JavaScript (`.js`) or Slint (`.slint`) file may exceed **300 lines of code**. Only code lines count; blank lines and comments do not (measured with `tokei`). This applies to production and test files alike. If an issue would push a file past the limit, stop and report it: the issue must be split (Issue Master §5.2).
 2. **Complexity:** no function may exceed **15 cyclomatic complexity** *or* **15 cognitive complexity**. Both limits apply.
    - Cognitive: clippy's `cognitive_complexity` lint, enabled at warn level in the workspace lints, with `cognitive-complexity-threshold = 15` in `clippy.toml`. Because the gate runs clippy with `-D warnings`, a violation fails the build.
    - Cyclomatic: measured per function with `lizard` in the gate (Chat Master D-78).
