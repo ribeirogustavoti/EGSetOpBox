@@ -1,41 +1,40 @@
 # Pi setup for the M0 spikes
 
-Manual preparation of the Raspberry Pi 4B for the wave B spikes (Chat Master D-89). The Pi runs the **stock Fedora 44 Minimal aarch64** image until the KIWI image exists. Steps marked *(M0-11)* or *(M0-13)* are only needed for that spike.
+Manual preparation of the Raspberry Pi 4B for the spike runs (Chat Master D-89, amended by D-111). The Pi runs the **EGSetOpBox KIWI image** (D-105) on a 32 GB microSD card, on **Wi-Fi only**. **SELinux stays enforcing.** Steps marked *(M0-11)* or *(M0-13)* are only needed for that spike.
 
-## 1. Write the image
+## 1. Starting point
 
-1. On the dev host, download **Fedora Minimal 44, Raw (raw.xz), ARM aarch64** from <https://fedoraproject.org/misc/> together with its `CHECKSUM` file.
-2. Verify the download with the `sha256sum -c` command shown on the download page.
-3. Write the `.raw.xz` file to the microSD card with your image writer (Fedora Media Writer or `arm-image-installer`).
-4. Put the card in the Pi. Connect the Pi's **HDMI0** port to the Bravia and plug a USB keyboard into the Pi.
+The Pi already has:
 
-## 2. First boot (keyboard on the Pi)
+1. The KIWI `Pi` image written to the microSD card, with `egsob-wifi.txt` on the FAT boot partition (D-106).
+2. The first boot done on the Bravia (HDMI0) with a USB keyboard. Text initial-setup created user `admin` (D-104).
+3. SSH access from the dev host as `admin@egsob` (key preset in the image; use the Pi's IP if the name does not resolve).
+4. The system updated with `sudo dnf -y upgrade --refresh` and rebooted.
 
-1. Power on. Complete Fedora's first-boot setup on the TV. Set the time zone to `Europe/Brussels` and create an admin user in the `wheel` group.
-2. Log in on the console with that user.
-3. Join the Wi-Fi network:
+From here on, work over SSH; the keyboard can stay on the Pi for console checks.
 
-   ```sh
-   sudo nmcli device wifi connect "<SSID>" --ask
-   ```
-
-4. Set the hostname and enable SSH:
-
-   ```sh
-   sudo hostnamectl set-hostname egsob
-   sudo systemctl enable --now sshd
-   ```
-
-5. From the dev host, copy your SSH key: `ssh-copy-id <user>@egsob` (use the Pi's IP if the name does not resolve). From now on, work over SSH; the keyboard can stay on the Pi for console checks.
-
-## 3. Update and enable RPM Fusion free (D-05)
+## 2. Check SELinux
 
 ```sh
-sudo dnf -y upgrade --refresh
-sudo dnf -y install "https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm"
-sudo dnf -y swap ffmpeg-free ffmpeg --allowerasing
-sudo reboot
+getenforce
 ```
+
+It must print `Enforcing`. Do not switch to permissive. After each spike run, collect any denials and hand them in with the spike's logs:
+
+```sh
+sudo ausearch -m avc -ts boot 2>/dev/null || sudo journalctl -b -k --grep 'avc:'
+```
+
+A denial is a spike finding, not something to fix by hand.
+
+## 3. Enable RPM Fusion free and full ffmpeg (D-05)
+
+```sh
+sudo dnf -y install "https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm"
+sudo dnf -y install --allowerasing ffmpeg
+```
+
+`--allowerasing` replaces `ffmpeg-free` libraries if any are installed. Record any other conflict `dnf` reports as a finding.
 
 ## 4. Packages for the spikes
 
@@ -43,6 +42,8 @@ sudo reboot
 sudo dnf -y install mpv mpv-libs v4l-utils curl jq socat \
     mesa-dri-drivers mesa-libEGL mesa-libgbm libinput libseat libxkbcommon fontconfig
 ```
+
+`ffprobe` (used by M0-12) comes with `ffmpeg` from section 3.
 
 ## 5. Service user `egsob` (M0-11, M0-13)
 
@@ -65,6 +66,12 @@ ls -l /dev/cec0
 `ls -l` must show owner `egsob`. If `/dev/cec0` does not exist, record that as a spike finding.
 
 ## 7. Spike service on tty1 (M0-11)
+
+Create the sample directory, owned by `egsob`:
+
+```sh
+sudo install -d -o egsob -g egsob /var/lib/egsob/spike
+```
 
 Create `/etc/systemd/system/egsob-spike.service`:
 
@@ -106,20 +113,12 @@ loginctl list-sessions
 2. Copy it to the Pi:
 
    ```sh
-   scp <binary> <user>@egsob:/tmp/
-   ssh <user>@egsob 'sudo install -m 0755 /tmp/<binary> /usr/local/bin/'
+   scp <binary> admin@egsob:/tmp/
+   ssh admin@egsob 'sudo install -m 0755 /tmp/<binary> /usr/local/bin/ && sudo restorecon -v /usr/local/bin/<binary>'
    ```
 
-Shell spikes are copied the same way, without the download step: `scp spikes/<name>/run.sh <user>@egsob:~/`.
+Shell spikes are copied the same way, without the download step: `scp spikes/<name>/run.sh admin@egsob:~/`.
 
-## 9. Clean-up after wave B
+## 9. After all four spikes
 
-```sh
-sudo systemctl stop egsob-spike.service
-sudo rm -f /etc/systemd/system/egsob-spike.service /etc/udev/rules.d/99-egsob-cec-spike.rules
-sudo rm -f /usr/local/bin/egsob-spike-*
-sudo systemctl daemon-reload
-sudo udevadm control --reload
-```
-
-The Pi is re-flashed with the KIWI image in Phase E.
+Nothing is cleaned up by hand. Once the last findings PR is merged, the microSD card is **re-flashed** with a freshly built KIWI image (D-105, D-111), `egsob-wifi.txt` is copied onto its FAT boot partition again, and first boot runs initial-setup again.
