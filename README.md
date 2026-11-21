@@ -19,7 +19,10 @@ Under development — milestone M0 (Foundations & spikes).
 On the x86_64 Fedora dev host:
 
 ```sh
-sudo dnf install rustup gcc
+sudo dnf install rustup gcc clang pkgconf-pkg-config \
+    libdrm-devel mesa-libgbm-devel mesa-libEGL-devel \
+    libinput-devel libseat-devel libxkbcommon-devel systemd-devel \
+    fontconfig-devel freetype-devel
 rustup-init -y
 cargo build --workspace
 cargo test --workspace

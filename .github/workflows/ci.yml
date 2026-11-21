@@ -16,8 +16,12 @@ jobs:
     runs-on: ubuntu-24.04-arm
     container: fedora:44
     steps:
-      - name: Install build tools
-        run: dnf -y install git gcc rustup
+      - name: Install build tools and Slint build dependencies
+        run: >
+          dnf -y install git gcc clang rustup pkgconf-pkg-config
+          libdrm-devel mesa-libgbm-devel mesa-libEGL-devel
+          libinput-devel libseat-devel libxkbcommon-devel systemd-devel
+          fontconfig-devel freetype-devel
 
       - uses: actions/checkout@v6
 
