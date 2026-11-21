@@ -1,0 +1,3 @@
+# SPDX-License-Identifier: GPL-3.0-only
+# HDMI-CEC adapter on HDMI0 for egsob (Chat Master D-24, D-124)
+SUBSYSTEM=="cec", KERNEL=="cec0", OWNER="egsob", MODE="0600"
