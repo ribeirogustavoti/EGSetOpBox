@@ -69,6 +69,12 @@ chmod 0755 /usr/libexec/egsob/wifi-import.sh
 systemctl enable egsob-wifi-import.service
 
 #--------------------------------------
+# egsob user (sysusers.d) and the TV interface service (D-122, D-123)
+#--------------------------------------
+systemd-sysusers /usr/lib/sysusers.d/egsob.conf
+systemctl enable egsob.service
+
+#--------------------------------------
 # Raspberry Pi: U-Boot next to the Pi firmware on the ESP
 #--------------------------------------
 if [[ "${profiles}" == *"Pi"* ]]; then
@@ -94,6 +100,8 @@ Options=ro,nofail
 WantedBy=multi-user.target
 EOF
 	systemctl enable mnt-egsob.mount
+	# egsob is built on the dev host and shared over virtiofs (D-107, D-123)
+	ln -sf /mnt/egsob/target/debug/egsob /usr/bin/egsob
 	# vivid emulates an HDMI input (TV side) and output (box side) with CEC (D-51)
 	echo 'vivid' > /etc/modules-load.d/vivid.conf
 	# VM only: admin (wheel) drives the CEC adapters without sudo (D-107)
