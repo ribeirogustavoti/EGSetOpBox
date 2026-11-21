@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
-//! Build script: embeds the git short hash and the UTC build time (Chat Master D-118).
+//! Build script: embeds the git short hash and the UTC build time (Chat Master D-118)
+//! and compiles the Slint UI (D-126).
 
 use std::path::Path;
 use std::process::Command;
@@ -8,11 +9,12 @@ use std::time::{SystemTime, UNIX_EPOCH};
 const UNKNOWN: &str = "unknown";
 const HASH_LEN: usize = 7;
 
-fn main() {
+fn main() -> Result<(), slint_build::CompileError> {
     rerun_on_git_changes();
     println!("cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH");
     println!("cargo:rustc-env=EGSOB_GIT_HASH={}", git_hash());
     println!("cargo:rustc-env=EGSOB_BUILD_TIME={}", build_time());
+    slint_build::compile("../../ui/placeholder.slint")
 }
 
 /// Runs `git` with `args` and returns its trimmed stdout, or `None` on any failure.

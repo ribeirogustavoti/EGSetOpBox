@@ -1,0 +1,40 @@
+// SPDX-License-Identifier: GPL-3.0-only
+// Placeholder screen: name, build line and clock (Chat Master D-118, D-126).
+
+export component Placeholder inherits Window {
+    in property <string> build-line;
+    in property <string> clock;
+
+    background: #101010;
+    default-font-family: "DejaVu Sans";
+
+    Text {
+        x: 0;
+        y: parent.height / 2 - self.height;
+        width: parent.width;
+        horizontal-alignment: center;
+        text: "EGSetOpBox";
+        color: #ffffff;
+        font-size: 160px;
+    }
+
+    Text {
+        x: 0;
+        y: parent.height / 2 + 40px;
+        width: parent.width;
+        horizontal-alignment: center;
+        text: root.build-line;
+        color: #9a9a9a;
+        font-size: 56px;
+    }
+
+    Text {
+        x: 0;
+        y: 60px;
+        width: parent.width - 80px;
+        horizontal-alignment: right;
+        text: root.clock;
+        color: #ffffff;
+        font-size: 72px;
+    }
+}
