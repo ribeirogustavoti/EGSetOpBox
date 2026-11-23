@@ -6,7 +6,8 @@
 # copied repository files:
 #   vm/smoke.sh
 # Needs the VM from docs/vm-libvirt.md with initial-setup done. Starts the VM
-# if it is off, runs the checks, saves everything to
+# if it is off, runs the checks (no screenshot: QEMU cannot capture the 3D
+# display, D-139; look at virt-manager instead), saves everything to
 # ~/.cache/egsob/smoke/<UTC time>/ and exits non-zero if a check fails.
 # EGSOB_VM selects another libvirt domain (default: egsob).
 
@@ -91,7 +92,6 @@ check_cec() {
 collect() {
 	vm_ssh journalctl -b --no-pager > "${out}/journal.txt" 2>&1 || true
 	vm_ssh journalctl -b -u egsob --no-pager > "${out}/journal-egsob.txt" 2>&1 || true
-	if (cd "${out}" && "${virsh[@]}" screenshot "${domain}"); then result screenshot yes; else result screenshot no; fi
 }
 
 main() {
