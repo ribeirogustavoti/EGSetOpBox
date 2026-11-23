@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: GPL-3.0-only
+# initial-setup empties /etc/hostname on first boot; put egsob back (D-140)
+[Unit]
+Description=Restore the egsob hostname after initial-setup
+After=initial-setup.service systemd-hostnamed.socket
+ConditionFileNotEmpty=!/etc/hostname
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/hostnamectl set-hostname egsob
+
+[Install]
+WantedBy=multi-user.target
