@@ -21,6 +21,8 @@ github_repo="ribeirogustavoti/EGSetOpBox"
 here="$(cd "$(dirname "$0")" && pwd)"
 description="${here}/kiwi"
 cache="${XDG_CACHE_HOME:-${HOME}/.cache}/egsob/kiwi"
+# Temporary copy of the description; global so the EXIT trap can still see it.
+staged=""
 
 die() {
 	echo "build-image.sh: $*" >&2
@@ -70,7 +72,7 @@ build() {
 }
 
 main() {
-	local profile="${1:-}" staged out
+	local profile="${1:-}" out
 	[[ "${profile}" == "VM" || "${profile}" == "Pi" ]] || { sed -n '4,15p' "$0" >&2; exit 2; }
 	[[ -f "${description}/egsob.kiwi" ]] || die "${description}/egsob.kiwi not found"
 	staged="$(mktemp -d)"
