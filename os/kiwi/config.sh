@@ -76,6 +76,8 @@ systemctl enable egsob-wifi-import.service
 test -x /usr/bin/egsob || { echo 'config.sh: /usr/bin/egsob missing; build with os/build-image.sh' >&2; exit 1; }
 systemd-sysusers /usr/lib/sysusers.d/egsob.conf
 systemctl enable egsob.service
+# initial-setup empties /etc/hostname; this unit restores egsob (D-140)
+systemctl enable egsob-hostname.service
 
 #--------------------------------------
 # Raspberry Pi: U-Boot next to the Pi firmware on the ESP
