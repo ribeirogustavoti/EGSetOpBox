@@ -56,8 +56,9 @@ Plus **`shellcheck`** on every added or changed `.sh` file, the **code limits ch
  
 | Environment | Use | Notes |
 |---|---|---|
-| Dev host | x86_64 Fedora, KVM/QEMU | Edit, unit tests, x86_64 builds |
-| x86_64 KVM VM | Fast UI/logic smoke tests | Same Fedora release as the image; virtio-gpu; scripts in `vm/` |
+| Dev box (`fedora-devel`) | Edit, build, unit tests, Claude Code | x86_64 Fedora 44 VM on the laptop; no kiwi-ng (Chat Master D-129) |
+| Image host (laptop) | Image builds, VMs, smoke test | kiwi-ng via `os/build-image.sh`, libvirt; engineer-run (D-129, D-130) |
+| libvirt VM `egsob` | Fast UI/logic smoke tests | On the laptop; `docs/vm-libvirt.md`, `vm/smoke.sh` (D-133, D-134) |
 | aarch64 QEMU VM (TCG) | Validate KIWI image boot | Slow (pure emulation): image-level checks only |
 | CEC simulation | Input tests without a TV | Kernel `vivid` driver; `cec-ctl` to inject key presses |
 | GitHub Actions arm64 | CI gate, aarch64 release binary, KIWI image | Runs on every PR |
