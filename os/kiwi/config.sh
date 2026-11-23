@@ -64,6 +64,14 @@ chmod 0644 /etc/ssh/authorized_keys.d/admin
 systemctl enable sshd.service
 
 #--------------------------------------
+# RPM Fusion free and full ffmpeg (D-05, D-141): the release package brings the
+# repository definitions and signing keys; ffmpeg is then installed signed
+#--------------------------------------
+dnf -y install "https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm"
+dnf -y install --allowerasing ffmpeg ffmpeg-libs
+dnf clean all
+
+#--------------------------------------
 # Wi-Fi from the boot-partition file (D-106)
 #--------------------------------------
 chmod 0755 /usr/libexec/egsob/wifi-import.sh
