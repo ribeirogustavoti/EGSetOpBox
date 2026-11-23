@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: GPL-3.0-only
 #
 # vivid CEC emulation inside the smoke-test VM (Chat Master D-51, D-107).
-# Runs in the VM as admin (no sudo; /dev/cec* is group wheel in the VM):
-#   /mnt/egsob/vm/vivid-cec.sh <command>
+# Runs in the VM as admin (no sudo; /dev/cec* is group wheel in the VM).
+# vm/smoke.sh pipes it over SSH: ssh admin@<VM> bash -s -- <command> < vm/vivid-cec.sh
 #   setup                 make vivid's HDMI input adapter a TV and its
 #                         HDMI output adapter a playback device "EGSetOpBox"
 #   send KEY...           TV sends USER_CONTROL_PRESSED/RELEASED for each key
@@ -81,7 +81,7 @@ main() {
 		send) cmd_send "$@" ;;
 		monitor) cmd_monitor "$@" ;;
 		topology) load_map; cec-ctl -d "${box_dev}" --show-topology ;;
-		*) sed -n '4,12p' "$0" >&2; exit 2 ;;
+		*) echo 'usage: vivid-cec.sh setup | send KEY... | monitor SECONDS | topology' >&2; exit 2 ;;
 	esac
 }
 
