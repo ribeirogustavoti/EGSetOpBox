@@ -92,6 +92,10 @@ if [[ "${profiles}" == *"VM"* ]]; then
 	echo 'vivid' > /etc/modules-load.d/vivid.conf
 	# VM only: admin (wheel) drives the CEC adapters without sudo (D-107)
 	echo 'SUBSYSTEM=="cec", GROUP="wheel", MODE="0660"' > /etc/udev/rules.d/60-egsob-vm-cec.rules
+	# VM only: admin runs v4l2-ctl (vivid link) and cec-ctl --monitor as root
+	# without a password, for the smoke test (D-138)
+	echo 'admin ALL=(root) NOPASSWD: /usr/bin/cec-ctl, /usr/bin/v4l2-ctl' > /etc/sudoers.d/egsob-vm-cec
+	chmod 0440 /etc/sudoers.d/egsob-vm-cec
 fi
 
 systemctl set-default multi-user.target
