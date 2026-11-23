@@ -1,9 +1,8 @@
 # SPDX-License-Identifier: GPL-3.0-only
 [Unit]
 Description=EGSetOpBox TV interface on tty1
-After=systemd-user-sessions.service initial-setup.service mnt-egsob.mount
+After=systemd-user-sessions.service initial-setup.service
 Conflicts=getty@tty1.service
-ConditionPathExists=/usr/bin/egsob
 
 [Service]
 User=egsob

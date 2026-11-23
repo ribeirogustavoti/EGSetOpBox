@@ -70,8 +70,10 @@ chmod 0755 /usr/libexec/egsob/wifi-import.sh
 systemctl enable egsob-wifi-import.service
 
 #--------------------------------------
-# egsob user (sysusers.d) and the TV interface service (D-122, D-123)
+# egsob binary (staged by os/build-image.sh), user (sysusers.d) and the TV
+# interface service (D-122, D-123, D-130)
 #--------------------------------------
+test -x /usr/bin/egsob || { echo 'config.sh: /usr/bin/egsob missing; build with os/build-image.sh' >&2; exit 1; }
 systemd-sysusers /usr/lib/sysusers.d/egsob.conf
 systemctl enable egsob.service
 
@@ -83,26 +85,9 @@ if [[ "${profiles}" == *"Pi"* ]]; then
 fi
 
 #--------------------------------------
-# VM: repository shared from the dev host with virtiofs, read-only (D-107)
+# VM: CEC emulation for the smoke test (D-107, D-134)
 #--------------------------------------
 if [[ "${profiles}" == *"VM"* ]]; then
-	mkdir -p /mnt/egsob
-	cat > /etc/systemd/system/mnt-egsob.mount << 'EOF'
-[Unit]
-Description=EGSetOpBox repository shared from the dev host (virtiofs)
-
-[Mount]
-What=egsob
-Where=/mnt/egsob
-Type=virtiofs
-Options=ro,nofail
-
-[Install]
-WantedBy=multi-user.target
-EOF
-	systemctl enable mnt-egsob.mount
-	# egsob is built on the dev host and shared over virtiofs (D-107, D-123)
-	ln -sf /mnt/egsob/target/debug/egsob /usr/bin/egsob
 	# vivid emulates an HDMI input (TV side) and output (box side) with CEC (D-51)
 	echo 'vivid' > /etc/modules-load.d/vivid.conf
 	# VM only: admin (wheel) drives the CEC adapters without sudo (D-107)
