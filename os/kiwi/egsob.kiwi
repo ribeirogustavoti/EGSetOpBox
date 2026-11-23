@@ -41,7 +41,7 @@
 		<type image="oem" format="qcow2"
 		      filesystem="btrfs" btrfs_root_is_subvolume="true" btrfs_set_default_volume="false" fsmountoptions="x-systemd.growfs,compress=zstd:1"
 		      kernelcmdline="console=tty1 console=ttyS0,115200n8" devicepersistency="by-uuid"
-		      bootpartition="true" bootpartsize="2000" bootfilesystem="ext4" efipartsize="500" firmware="uefi"
+		      bootpartition="true" bootpartsize="2000" bootfilesystem="ext4" efipartsize="500" firmware="uefi" eficsm="false"
 		      rootfs_label="fedora"
 		      >
 			<bootloader name="grub2" bls="true" console="console" timeout="5"/>
