@@ -115,7 +115,7 @@ Act as a senior software engineer experienced in embedded Linux, TV/set-top-box 
 | D-82 | Dev host release | The dev host was upgraded from Fedora 37 to **Fedora 44** (confirmed 2026-11-18); D-35 means Fedora 44. |
 | D-83 | Pre-VM runtime checks | Until M0-19 (smoke test script) is merged, issues that change runtime behaviour replace the VM smoke test AC line with a command check (e.g. `cargo run -p egsob-app` prints `egsob 0.1.0`). |
 | D-84 | Wave A sequencing | The dev host is upgraded to Fedora 44 **before M0-06** is dispatched; M0-30 and M0-02…M0-05 run on the current host with rustup. |
-| D-85 | MSRV | The workspace sets `rust-version = "1.99.1"` (same value as `rust-toolchain.toml`, D-77) and every crate inherits it; set in the scaffold (M0-02). |
+| D-85 | MSRV | The workspace sets `rust-version` to the same value as `rust-toolchain.toml` (D-77) and every crate inherits it; set in the scaffold (M0-02). **1.100.0** since M0-46 (was 1.99.1). |
 | D-86 | CI runs | The CI workflow runs on **pull requests to `main`** and **pushes to `main`**. A CI issue is accepted when its own PR run is green. |
 | D-87 | SPDX on config | Every TOML and YAML file (Cargo manifests, toolchain/rustfmt/clippy config, GitHub workflows, KIWI/YAML config) starts with `# SPDX-License-Identifier: GPL-3.0-only`. Markdown, JSON, `.gitignore` and `LICENSE` carry none. |
 | D-88 | M0 reopened | The GitHub milestone `M0 — Foundations & spikes` was closed with only Phase A done (#1–#11). It is **reopened**; phases B–E are finished **in M0**. M1 issues are dispatched only after the D-71 exit. M1 planning is deferred to a later session. |
@@ -401,6 +401,7 @@ Items are listed **in implementation order** (phases A → E). `Deps` names the 
 
 | ID | Title | Epic | Deps |
 |---|---|---|---|
+| M0-46 | `Workspace — bump the Rust toolchain pin to Fedora 44's 1.100.0` (D-77, D-85) | E0.1 | 45 |
 | M0-26 | `KIWI — enable RPM Fusion free (full ffmpeg)` | E0.4 | 15 |
 | M0-27 | `KIWI — network (Ethernet + Wi-Fi)` (binary moved to M0-43, user and autostart to M0-21) | E0.4 | 26, 43 |
 | M0-28 | `CI — build KIWI image on tag and attach to GitHub Release` (fallback D-116) | E0.2 | 27 |
@@ -545,3 +546,4 @@ when the session ends.
 - **v11 (2026-11-19):** M0-36 build info: D-118 records the output format, the hash and time sources and the re-run trigger; D-76 and D-108 updated to the new `egsob` output line.
 - **v12 (2026-11-21):** Wave D part 2 planning. Added D-119…D-127 (spikes #23–#26 closed without runs, wave D part 2 order, `EGSOB_UI=1` switch, `egsob` user via sysusers.d, `egsob.service` enabled at boot with the VM symlink, CEC udev rule, runtime and CI packages, placeholder screen with a `chrono` clock, creation prompts compile unverified samples, `unwrap_used` allowed only on the Slint-generated module). D-101, D-110, D-111 and D-112 superseded; D-45, D-58, D-63, D-70, D-71, D-76 and D-115 amended; D-111 now points to M0-35a (#48). §7 O-04/O-15/O-16 closed. §8: Phase B closed; Phase D adds M0-35a, M0-38…M0-40 and reorders M0-21 → M0-22 → M0-20; M0-27 retitled.
 - **v13 (2026-11-22):** Wave E planning. Added D-129…D-136 (fedora-devel as dev box, laptop as image host; `egsob` inside both images through `os/build-image.sh`; release workflow on tag and manual dispatch; no shared folder, UI owns tty1; libvirt VM documented in `docs/vm-libvirt.md`; smoke test on libvirt; VM UEFI-only, laptop and fedora-devel SSH keys, repart masked; wave E order) and O-17 (hostname). D-107 superseded; D-35, D-51, D-65, D-69, D-74, D-105, D-108, D-113, D-115 and D-123 amended. §4.1, §4.2, §5 and §6 updated. §8: Phase D adds M0-41…M0-45 and takes M0-37 from Phase E; M0-27 retitled to network only.
+- **v14 (2026-11-23):** Toolchain pin and MSRV bumped from 1.99.1 to 1.100.0, Fedora 44's current `rust` (D-77, D-85; M0-46). §8 Phase E starts with M0-46.
