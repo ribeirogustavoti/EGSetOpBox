@@ -1,0 +1,46 @@
+# SPDX-License-Identifier: GPL-3.0-only
+name: Release binary
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  aarch64:
+    name: aarch64 release binary
+    runs-on: ubuntu-24.04-arm
+    container: fedora:44
+    steps:
+      - name: Install build tools and Slint build dependencies
+        run: >
+          dnf -y install git gcc clang rustup pkgconf-pkg-config
+          libdrm-devel mesa-libgbm-devel mesa-libEGL-devel
+          libinput-devel libseat-devel libxkbcommon-devel systemd-devel
+          fontconfig-devel freetype-devel
+
+      - uses: actions/checkout@v6
+
+      - name: Install the pinned Rust toolchain
+        run: |
+          rustup-init -y --default-toolchain none --profile minimal
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+          channel="$(sed -n 's/^channel = "\(.*\)"$/\1/p' rust-toolchain.toml)"
+          "$HOME/.cargo/bin/rustup" toolchain install "$channel" --profile minimal
+
+      - name: Build
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          cargo build --release -p egsob-app
+
+      - name: Show the build line
+        run: target/release/egsob
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: egsob-aarch64
+          path: target/release/egsob
+          if-no-files-found: error
