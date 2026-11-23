@@ -33,10 +33,9 @@ echo 'egsob' > /etc/hostname
 } >> /etc/default/grub
 
 #--------------------------------------
-# Grow the root partition on first boot
+# No partition growth at boot: systemd-repart masked (D-135)
 #--------------------------------------
-mkdir -p /etc/repart.d
-printf '[Partition]\nType=root\n' > /etc/repart.d/50-root.conf
+systemctl mask systemd-repart.service
 
 #--------------------------------------
 # Accounts (D-104): root locked, admin created by initial-setup
@@ -47,7 +46,8 @@ systemctl enable initial-setup.service
 touch /etc/reconfigSys
 
 #--------------------------------------
-# SSH: keys only, no root, engineer key preset for admin (D-66, D-104)
+# SSH: keys only, no root, engineer keys preset for admin (D-66, D-104, D-135):
+# image host (laptop) and dev box (fedora-devel)
 #--------------------------------------
 cat > /etc/ssh/sshd_config.d/40-egsob.conf << 'EOF'
 PasswordAuthentication no
@@ -57,6 +57,7 @@ AuthorizedKeysFile .ssh/authorized_keys /etc/ssh/authorized_keys.d/%u
 EOF
 install -d -m 0755 /etc/ssh/authorized_keys.d
 cat > /etc/ssh/authorized_keys.d/admin << 'EOF'
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIByjUOCUuddmfoCSchNf4ZVy0WAqgFu6hnmh8TljEQ6+ grbonis@fedora
 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOIk3Qf+zcoT3S/ylqqTlaJeOCKlQvLmLweXorRNNz1F
 EOF
 chmod 0644 /etc/ssh/authorized_keys.d/admin
