@@ -240,7 +240,7 @@ EGSetOpBox/
 ├── os/build-image.sh          # image build on the laptop (D-130)
 ├── vm/                        # smoke test against the libvirt VM (D-134)
 ├── .github/workflows/
-└── docs/                      # spike findings, pi-setup.md, vm-libvirt.md (D-133)
+└── docs/                      # vm-libvirt.md (D-133), vm-libvirt-aarch64.md (D-142)
 ```
  
 Add-on repository `EGSetOpBox-addons`: `index.json` + one folder per add-on.
@@ -352,7 +352,7 @@ Item titles follow the Issue Master title format. Bodies are drafted just in tim
  
 Prerequisite (not an issue): the engineer creates the empty repo; settings per D-52. Exit criteria: D-71. No due date. Milestone reopened after Phase A (D-88).
  
-Items are listed **in implementation order** (phases A → E). `Deps` names the items that must be merged first (for spikes: findings merged). Epic in brackets.
+Items are listed **in implementation order** (phases A → G). `Deps` names the items that must be merged first (for spikes: findings merged). Epic in brackets.
  
 **Phase A — Repo & gate**
  
@@ -580,3 +580,4 @@ when the session ends.
 - **v15 (2026-11-23):** Wave F (Phase E) planning after the wave E verification. Added D-137…D-143 (wave F order; vivid CEC link, real logical address and VM-only sudo; no screenshot in the smoke test; hostname restored after initial-setup; RPM Fusion and ffmpeg via `config.sh`; aarch64 libvirt VM doc; no GitHub Release image). D-116 superseded; D-05, D-65, D-71, D-108, D-117, D-134 and D-135 amended; O-17 resolved. §5 Delivery row. §8 Phase E rewritten: M0-47…M0-49 added, M0-27 retitled, M0-28 removed.
 - **v16 (2026-11-24):** Wave G (M0 close-out) planning after the pre-tag check on the Pi and the laptop. Added D-144…D-152 (wave G order; pre-tag check with build `1509d11`; M0 exit run on tag `v0.1.0` with its Pi and VM checks; masters cleanup rule; spike rules and `spikes/cec/run.sh` removed; exemplars #58 and #82; README contents and flash command; `docs/pi-setup.md` removed; project copies synced after wave G). D-102 superseded; D-71 amended. §8 adds Phase G (M0-50…M0-54); the release step points to D-146.
 - **v17 (2026-11-24):** Masters cleanup (D-147, M0-51): §3 rows rewritten to their current final text, with amendment notes folded in; D-61, D-63, D-70, D-83, D-89…D-102, D-110…D-112 and D-116 are now one-line pointers; D-20 and D-50 no longer rely on the M0 spikes. §6: the two risks that pointed to the M0 spikes now say they are not validated yet.
+- **v18 (2026-11-24):** `docs/pi-setup.md` and `spikes/cec/run.sh` deleted (D-148, D-151; M0-54). §4.2 `docs/` comment lists the two VM documents; §8 M0 intro says phases A → G.
