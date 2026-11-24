@@ -34,7 +34,6 @@ You are a senior Rust engineer with embedded Linux and TV/set-top-box experience
 7. Commit with message `<issue title> (#<n>)`. One or more commits are fine.
 8. Open a PR to `main`: title = issue title, body = `Closes #<n>`, the AC checklist with each item ticked or explained, and the unticked smoke-test checklist for the engineer.
 9. The engineer reviews and merges (merge commit, Chat Master D-103).
-**Spike issues** (Issue Master §5.4): steps 2–8 apply to the spike code, but the code PR is **never merged**; the engineer closes it and keeps the branch. The engineer runs the spike on the target hardware and supplies the results. A second PR then adds `docs/spikes/<name>.md` and the Chat Master update, written by the agent from the engineer's logs and notes; that PR closes the issue. Spike code lives in `spikes/<name>/` outside the Cargo workspace and is exempt from the quality gate; red code limits and shellcheck checks on the code PR are accepted. A Rust spike may add its own build workflow file on the spike branch (Chat Master D-90, D-91, D-93). Never ask the engineer for Pi runs, logs or findings before the KIWI image exists (Chat Master D-101).
  
 **Claude Code** reads `CLAUDE.md` at the repo root, which points here. `.claude/settings.json` turns off commit and PR attribution (Chat Master D-73); never re-enable it or add attribution by hand.
  
@@ -59,9 +58,9 @@ Plus **`shellcheck`** on every added or changed `.sh` file, the **code limits ch
 | Dev box (`fedora-devel`) | Edit, build, unit tests, Claude Code | x86_64 Fedora 44 VM on the laptop; no kiwi-ng (Chat Master D-129) |
 | Image host (laptop) | Image builds, VMs, smoke test | kiwi-ng via `os/build-image.sh`, libvirt; engineer-run (D-129, D-130) |
 | libvirt VM `egsob` | Fast UI/logic smoke tests | On the laptop; `docs/vm-libvirt.md`, `vm/smoke.sh` (D-133, D-134) |
-| aarch64 QEMU VM (TCG) | Validate KIWI image boot | Slow (pure emulation): image-level checks only |
+| aarch64 libvirt VM `egsob-pi` (TCG) | Validate the Pi image boot | On the laptop; `docs/vm-libvirt-aarch64.md` (D-142). Slow (pure emulation): image-level checks only |
 | CEC simulation | Input tests without a TV | Kernel `vivid` driver; `cec-ctl` to inject key presses |
-| GitHub Actions arm64 | CI gate, aarch64 release binary, KIWI image | Runs on every PR |
+| GitHub Actions arm64 | CI gate, aarch64 release binary | Gate on every PR and push to `main`; release binary on `v*` tags and manual dispatch (D-86, D-131) |
 | Raspberry Pi 4B + Bravia | Real decode, CEC, performance | Engineer-run when the AC say "on the Pi" |
  
 Logs: `journalctl -u egsob -f` (tracing → journald).

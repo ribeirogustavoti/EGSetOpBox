@@ -133,7 +133,7 @@ GitHub checkbox list (`- [ ]` per item). Each criterion:
   - `- [ ] cargo test --workspace passes`
   - `- [ ] Code limits check passes (≤300 code lines per .rs/.js/.slint file, cyclomatic and cognitive complexity ≤15 per function, no inline tests)`
   - `- [ ] shellcheck passes` — required whenever the issue adds or changes a `.sh` file.
-  - `- [ ] VM smoke test passes (<what to observe>)` — required whenever the issue changes runtime behavior; state what the tester must see. Until the VM smoke test script exists (Chat Master D-83), use a command check instead, e.g. `- [ ] cargo run -p egsob-app prints egsob 0.1.0`.
+  - `- [ ] VM smoke test passes (<what to observe>)` — required whenever the issue changes runtime behavior; state what the tester must see.
 - Non-Rust issues (KIWI, CI) replace the cargo lines with their own verification command (e.g. `kiwi-ng ... system build` succeeds; image boots in the aarch64 QEMU VM).
 - The gate lines count as **one** checkbox for the split-signal limit in §5.2.
 
@@ -154,16 +154,6 @@ Never leave the section empty.
 
 - **Default cap** (single-purpose issues): **≤5 files in Where, ≤~150 LOC net new** (additions minus deletions). It applies to every issue, refactors included; there is no refactor exception.
 
-### 5.3 One-off waivers
-
-The engineer may waive the §5.1 caps and §5.2 split signals for a named item. Every waiver is recorded next to the item in Chat Master §8; an issue may rely on a waiver only if it is recorded there. The body's header context states it: `Cap waiver: Chat Master §8 <item ID>`.
-
-Current waivers: **M0-01** (repo bootstrap: masters, README, LICENSE, Claude Code config) and **M0-02** (scaffold of all 12 `egsob-*` crates, crossing crate boundaries).
-
-### 5.4 Spike issues
-
-Spike issues (title prefix `Spike —`) follow the six-section format **where it applies**. Sections that do not apply may be dropped, and the order of the remaining sections is unchanged. Typical shape: What (the question to answer + Out of scope), How (what the spike code/script does and what the engineer runs), Where (spike files under `spikes/<name>/` and `docs/spikes/<name>.md`), AC (what the findings must report), Constraints. Source Code Samples are optional for spike code, because it is never merged. Spikes deliver two PRs: the code PR is closed unmerged (branch kept), and the findings PR merges `docs/spikes/<name>.md` plus the Chat Master update.
-
 ### 5.2 Split signals
 
 Any one of these triggers a stop and request-to-split:
@@ -172,6 +162,12 @@ Any one of these triggers a stop and request-to-split:
 - Introduces a NEW trait or refactors an EXISTING one
 - >5 files in Where
 - Crosses crate boundaries in the Cargo workspace
+
+### 5.3 One-off waivers
+
+The engineer may waive the §5.1 caps and §5.2 split signals for a named item. Every waiver is recorded next to the item in Chat Master §8; an issue may rely on a waiver only if it is recorded there. The body's header context states it: `Cap waiver: Chat Master §8 <item ID>`.
+
+Current waivers: **M0-01** (repo bootstrap: masters, README, LICENSE, Claude Code config) and **M0-02** (scaffold of all 12 `egsob-*` crates, crossing crate boundaries).
 
 ---
 
@@ -182,17 +178,23 @@ Any one of these triggers a stop and request-to-split:
 - **AI attribution anywhere** — title, body, commit messages, PR titles/descriptions, branch names, code comments, changelogs, or co-author trailers. No "Generated with…", "Co-authored-by: Claude", "🤖", or any analogous mention of any AI tool.
 - **Labels** — this project uses none.
 - **Section reordering** — the six-section order in §3 is immutable.
-- **Section omissions** — every section must appear, even if brief (only exception: spike issues, §5.4).
+- **Section omissions** — every section must appear, even if brief.
 - **Guessing file contents** — if you lack the current contents of a MODIFY file, ask; do not fabricate a diff.
 - **Silent file additions** — the AI agent MUST NOT add production files during implementation that were not listed in Where.
 
 ---
 
-## 7. Canonical exemplar
+## 7. Canonical exemplars
 
-The structure and density reference is the engineer-supplied example issue (*"Bundled plugin archives must include the plugin's top-level `assets/` directory"*, from another project). Match its:
+The structure and density references are two merged EGSetOpBox issues (Chat Master D-149):
+
+- **#58** `App — placeholder Slint screen with name, version, build info and clock on KMS` — code issues: Rust, `.slint`, `build.rs`, `Cargo.lock` as a generated file.
+- **#82** `KIWI — keep the egsob hostname after initial-setup` — OS image issues: KIWI overlay file and `config.sh`.
+
+Match their:
 
 - Section order and heading style
+- `Depends on #N` header context
 - `**Out of scope:**` sub-block in What
 - Numbered How steps referencing exact paths
 - `### Where (N file(s))` heading with NEW/MODIFY tags and descriptions
@@ -200,7 +202,7 @@ The structure and density reference is the engineer-supplied example issue (*"Bu
 - Testable AC with build/test lines at the end
 - Bulleted Constraints with the no-AI-attribution line
 
-Differences for EGSetOpBox: no labels; SPDX header is `GPL-3.0-only`; gate lines per §4.5. Once the first EGSetOpBox issue is merged, replace this exemplar with it and log the change in §10.
+#58's AC lines about the smoke test's `screen.png` and `vm/run-x86.sh` are historical (Chat Master D-133, D-139); do not copy them.
 
 ---
 
@@ -230,5 +232,7 @@ Repository root: `EGSetOpBox-Issue-Master.md`.
 - **v4 (2026-11-18):** §4.3: `Cargo.lock` listed as generated, no sample (Chat Master D-75). §4.5: command check replaces the VM smoke line until the VM exists (D-83). §4.4: SPDX also on TOML and YAML files (D-87).
 
 - **v5 (2026-11-19):** Wave D planning. §5.1: default cap raised to **≤5 files** in Where (LOC cap unchanged at ≤~150 net new); the split/consolidate refactor exception, its body requirements and the §5.2 trait carve-out are removed. §5.2: file split signal at >5 files. §4.4: oversized MODIFY → split the issue. §4.3 and §4.5: RPM mentions removed (Chat Master D-113).
+
+- **v6 (2026-11-24):** Wave G cleanup (Chat Master D-148, D-149). §5 subsections in order (5.1 caps, 5.2 split signals, 5.3 waivers); §5.4 spike issues removed, and the §6 omission rule no longer names an exception. §4.5: the pre-VM command-check sentence removed (the smoke test exists). §7: exemplars are #58 and #82.
 
 *Sync rule: when an issue-format rule changes, update this file first, log it here, then verify Chat Master and Code Master pointers still resolve.*
